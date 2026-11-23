@@ -1,0 +1,32 @@
+name: Generate initial migration
+
+on:
+  push:
+    branches:
+      - feature/backend-foundation
+    paths:
+      - .github/workflows/generate-initial-migration.yml
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet tool install --global dotnet-ef --version 10.0.0
+      - run: dotnet restore CityEscapeQuest.slnx
+      - name: Generate SQL Server migration
+        run: >-
+          dotnet ef migrations add InitialCreate
+          --project src/CityEscapeQuest.Infrastructure
+          --startup-project src/CityEscapeQuest.WebApi
+          --output-dir Persistence/Migrations
+      - uses: actions/upload-artifact@v4
+        with:
+          name: initial-sql-server-migration
+          path: src/CityEscapeQuest.Infrastructure/Persistence/Migrations

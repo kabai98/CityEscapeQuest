@@ -10,7 +10,10 @@ public sealed class HealthEndpointTests : IClassFixture<HealthEndpointTests.ApiF
 
     public HealthEndpointTests(ApiFactory factory)
     {
-        _client = factory.CreateClient();
+        _client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost")
+        });
     }
 
     [Fact]

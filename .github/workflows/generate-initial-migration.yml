@@ -6,6 +6,7 @@ on:
       - feature/backend-foundation
     paths:
       - .github/workflows/generate-initial-migration.yml
+      - src/CityEscapeQuest.WebApi/CityEscapeQuest.WebApi.csproj
 
 permissions:
   contents: read

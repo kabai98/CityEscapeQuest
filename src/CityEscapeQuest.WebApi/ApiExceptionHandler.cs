@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CityEscapeQuest.WebApi;
 
-public sealed class ApiExceptionHandler(IProblemDetailsService problemDetailsService) : IExceptionHandler
+public sealed class ApiExceptionHandler(
+    IProblemDetailsService problemDetailsService,
+    IHostEnvironment environment) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
@@ -22,7 +24,7 @@ public sealed class ApiExceptionHandler(IProblemDetailsService problemDetailsSer
         };
 
         httpContext.Response.StatusCode = statusCode;
-        var detail = statusCode == StatusCodes.Status500InternalServerError
+        var detail = statusCode == StatusCodes.Status500InternalServerError && !environment.IsEnvironment("Testing")
             ? "The server could not complete the request."
             : exception.Message;
         return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext

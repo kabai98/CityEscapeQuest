@@ -20,7 +20,9 @@ public sealed class HealthEndpointTests : IClassFixture<HealthEndpointTests.ApiF
     public async Task LiveHealth_ReturnsSuccess()
     {
         var response = await _client.GetAsync("/health/live");
-        response.EnsureSuccessStatusCode();
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        Assert.True(response.IsSuccessStatusCode, $"HTTP {(int)response.StatusCode}: {responseBody}");
     }
 
     public sealed class ApiFactory : WebApplicationFactory<Program>

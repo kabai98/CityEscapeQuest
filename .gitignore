@@ -1,0 +1,41 @@
+# Product and architecture notes remain local for now.
+/docs/
+
+# .NET build output
+**/bin/
+**/obj/
+artifacts/
+
+# IDE and user-specific files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Test and coverage output
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# Local configuration and secrets
+appsettings.Local.json
+appsettings.*.local.json
+.env
+.env.*
+secrets.json
+
+# Local databases and logs
+*.db
+*.db-shm
+*.db-wal
+*.mdf
+*.ldf
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

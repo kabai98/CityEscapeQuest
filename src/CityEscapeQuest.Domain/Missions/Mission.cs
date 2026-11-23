@@ -56,7 +56,7 @@ public sealed class Mission
     public decimal? Price { get; private set; }
     public bool IsFree => Price is null or 0;
     public string PreviewImageUrl { get; private set; } = string.Empty;
-    public GeoPoint StartLocation { get; private set; }
+    public GeoPoint StartLocation { get; private set; } = null!;
     public int StartRadiusMeters { get; private set; }
     public bool IsPublished { get; private set; } = true;
 }

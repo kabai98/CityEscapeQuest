@@ -7,9 +7,10 @@ public sealed class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
 {
     public AppDbContext CreateDbContext(string[] args)
     {
+        var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__SqlServer")
+            ?? "Server=(localdb)\\mssqllocaldb;Database=CityEscapeQuest;Trusted_Connection=True;TrustServerCertificate=True";
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlServer(
-                "Server=(localdb)\\mssqllocaldb;Database=CityEscapeQuest;Trusted_Connection=True;TrustServerCertificate=True")
+            .UseSqlServer(connectionString)
             .Options;
 
         return new AppDbContext(options);

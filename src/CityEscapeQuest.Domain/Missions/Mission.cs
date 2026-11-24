@@ -24,7 +24,8 @@ public sealed class Mission
         string storyIntro = "",
         string taskPrompt = "",
         string answerHash = "",
-        string completionText = "")
+        string completionText = "",
+        bool isLocationCheckEnabled = true)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
@@ -49,8 +50,9 @@ public sealed class Mission
         EstimatedDurationMinutes = estimatedDurationMinutes;
         Price = price;
         PreviewImageUrl = previewImageUrl.Trim();
-        StartLocation = startLocation;
-        StartRadiusMeters = startRadiusMeters;
+        StartLocation = new MissionLocation(id, startLocation, startRadiusMeters);
+        StartLocationId = StartLocation.Id;
+        IsLocationCheckEnabled = isLocationCheckEnabled;
         StoryIntro = storyIntro.Trim();
         TaskPrompt = taskPrompt.Trim();
         AnswerHash = answerHash;
@@ -66,8 +68,10 @@ public sealed class Mission
     public decimal? Price { get; private set; }
     public bool IsFree => Price is null or 0;
     public string PreviewImageUrl { get; private set; } = string.Empty;
-    public GeoPoint StartLocation { get; private set; } = null!;
-    public int StartRadiusMeters { get; private set; }
+    public Guid StartLocationId { get; private set; }
+    public MissionLocation StartLocation { get; private set; } = null!;
+    public int StartRadiusMeters => StartLocation.RadiusMeters;
+    public bool IsLocationCheckEnabled { get; private set; } = true;
     public bool IsPublished { get; private set; } = true;
     public string StoryIntro { get; private set; } = string.Empty;
     public string TaskPrompt { get; private set; } = string.Empty;

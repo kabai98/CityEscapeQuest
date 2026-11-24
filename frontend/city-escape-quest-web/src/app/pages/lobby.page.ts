@@ -29,16 +29,22 @@ import { GameSessionApi } from '../core/api';
             }
           </ul>
           <div class="location-actions">
+            @if (lobby.isLocationCheckEnabled) {
             <button class="button ghost" type="button" [disabled]="locating()" (click)="reportMyLocation()">
               {{ locating() ? 'Helyzet mérése…' : (currentLocationReady(lobby) ? 'Helyzet frissítése ✓' : 'Helyzetem ellenőrzése') }}
             </button>
+            }
             @if (isOwner(lobby)) {
-              <button class="button primary" type="button" [disabled]="starting() || !allLocationsReady(lobby)" (click)="startGame()">
+              <button class="button primary" type="button" [disabled]="starting() || (lobby.isLocationCheckEnabled && !allLocationsReady(lobby))" (click)="startGame()">
                 {{ starting() ? 'Indítás…' : 'Játék indítása' }}
               </button>
             }
           </div>
-          <p class="lobby-hint">Minden játékosnak a Deák Ferenc tér 120 méteres körzetében kell friss, legfeljebb 50 méteres pontosságú helyzetet küldenie.</p>
+          @if (lobby.isLocationCheckEnabled) {
+            <p class="lobby-hint">Minden játékosnak friss, legfeljebb 50 méteres pontosságú helyzetet kell küldenie a küldetés kezdőpontjáról.</p>
+          } @else {
+            <p class="lobby-hint">Ehhez a küldetéshez a GPS-ellenőrzés ki van kapcsolva.</p>
+          }
         </article>
       }
       @if (errorMessage()) { <p class="form-message" role="alert">{{ errorMessage() }}</p> }

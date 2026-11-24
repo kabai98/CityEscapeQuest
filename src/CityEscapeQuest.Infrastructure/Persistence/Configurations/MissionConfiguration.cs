@@ -22,11 +22,12 @@ internal sealed class MissionConfiguration : IEntityTypeConfiguration<Mission>
         builder.Property(mission => mission.AnswerHash).HasMaxLength(64);
         builder.Property(mission => mission.CompletionText).HasMaxLength(2_000);
         builder.Ignore(mission => mission.IsFree);
-        builder.OwnsOne(mission => mission.StartLocation, owned =>
-        {
-            owned.Property(point => point.Latitude).HasColumnName("StartLatitude");
-            owned.Property(point => point.Longitude).HasColumnName("StartLongitude");
-        });
+        builder.Ignore(mission => mission.StartRadiusMeters);
+        builder.Property(mission => mission.IsLocationCheckEnabled).HasDefaultValue(true);
+        builder.HasOne(mission => mission.StartLocation)
+            .WithMany()
+            .HasForeignKey(mission => mission.StartLocationId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasData(
             new
@@ -39,7 +40,8 @@ internal sealed class MissionConfiguration : IEntityTypeConfiguration<Mission>
                 EstimatedDurationMinutes = 45,
                 Price = (decimal?)null,
                 PreviewImageUrl = "/images/missions/danube-message.jpg",
-                StartRadiusMeters = 100,
+                StartLocationId = DanubeMissionId,
+                IsLocationCheckEnabled = true,
                 IsPublished = true,
                 StoryIntro = "",
                 TaskPrompt = "",
@@ -56,7 +58,8 @@ internal sealed class MissionConfiguration : IEntityTypeConfiguration<Mission>
                 EstimatedDurationMinutes = 30,
                 Price = (decimal?)null,
                 PreviewImageUrl = "/images/missions/clockmaker.jpg",
-                StartRadiusMeters = 120,
+                StartLocationId = ClockmakerMissionId,
+                IsLocationCheckEnabled = true,
                 IsPublished = true,
                 StoryIntro = "Budapest központi órái 23:47-nél megálltak. Varga Áron órásmester eltűnt, de egy rézlapot hagyott hátra: a város csak akkor indul újra, ha megtaláljátok a helyreállító számot.",
                 TaskPrompt = "Három föld alatti vonal találkozik ezen a téren. Add össze a vonalak számait, és írd be az eredményt számjeggyel vagy betűvel.",
@@ -64,8 +67,5 @@ internal sealed class MissionConfiguration : IEntityTypeConfiguration<Mission>
                 CompletionText = "A rézlap fogaskerekei megmozdulnak. A 6-os kód helyes: az órák újra járnak, és az órásmester következő nyoma felvillan a szerkezet belsejében."
             });
 
-        builder.OwnsOne(mission => mission.StartLocation).HasData(
-            new { MissionId = DanubeMissionId, Latitude = 47.4979, Longitude = 19.0402 },
-            new { MissionId = ClockmakerMissionId, Latitude = 47.497913, Longitude = 19.054416 });
     }
 }

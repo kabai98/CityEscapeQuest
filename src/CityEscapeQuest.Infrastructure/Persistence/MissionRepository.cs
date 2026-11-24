@@ -9,6 +9,7 @@ internal sealed class MissionRepository(AppDbContext dbContext) : IMissionReposi
     public async Task<IReadOnlyList<Mission>> BrowseAsync(int skip, int take, CancellationToken cancellationToken) =>
         await dbContext.Missions
             .AsNoTracking()
+            .Include(mission => mission.StartLocation)
             .Where(mission => mission.IsPublished)
             .OrderBy(mission => mission.Title)
             .Skip(skip)
@@ -16,5 +17,6 @@ internal sealed class MissionRepository(AppDbContext dbContext) : IMissionReposi
             .ToListAsync(cancellationToken);
 
     public Task<Mission?> GetAsync(Guid id, CancellationToken cancellationToken) =>
-        dbContext.Missions.AsNoTracking().SingleOrDefaultAsync(mission => mission.Id == id, cancellationToken);
+        dbContext.Missions.AsNoTracking().Include(mission => mission.StartLocation)
+            .SingleOrDefaultAsync(mission => mission.Id == id, cancellationToken);
 }

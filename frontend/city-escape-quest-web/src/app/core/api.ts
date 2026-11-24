@@ -19,6 +19,7 @@ export interface MissionDetails extends MissionSummary {
   startLatitude: number;
   startLongitude: number;
   startRadiusMeters: number;
+  isLocationCheckEnabled: boolean;
 }
 
 export interface CreatedGameSession {
@@ -59,6 +60,7 @@ export interface GameSessionLobby {
   missionId: string;
   status: string;
   joinCodeExpiresAtUtc: string;
+  isLocationCheckEnabled: boolean;
   participants: readonly LobbyParticipant[];
 }
 

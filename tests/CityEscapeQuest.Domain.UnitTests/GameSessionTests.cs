@@ -62,6 +62,18 @@ public sealed class GameSessionTests
     }
 
     [Fact]
+    public void Start_WhenLocationCheckDisabled_StartsWithoutLocation()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var session = GameSession.Create(Guid.NewGuid(), "owner", "Owner", "hash", now, now.AddHours(2));
+
+        session.Start(new GeoPoint(47.4979, 19.0402), 100, 1, now,
+            TimeSpan.FromMinutes(2), 50, isLocationCheckEnabled: false);
+
+        Assert.Equal(GameSessionStatus.InProgress, session.Status);
+    }
+
+    [Fact]
     public void AddGuest_WhenJoinCodeExpired_ThrowsDomainException()
     {
         var now = DateTimeOffset.UtcNow;

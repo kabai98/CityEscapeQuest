@@ -76,11 +76,14 @@ public sealed class GameSessionService(
             throw new UnauthorizedAccessException("The caller is not a participant of this game session.");
         }
 
+        var mission = await missions.GetAsync(session.MissionId, cancellationToken)
+            ?? throw new KeyNotFoundException("Mission was not found.");
         return new GameSessionLobby(
             session.Id,
             session.MissionId,
             session.Status.ToString(),
             session.JoinCodeExpiresAtUtc,
+            mission.IsLocationCheckEnabled,
             session.Participants.Select(participant => new LobbyParticipant(
                 participant.Id,
                 participant.DisplayName,
@@ -129,12 +132,13 @@ public sealed class GameSessionService(
 
         var now = timeProvider.GetUtcNow();
         session.Start(
-            mission.StartLocation,
+            mission.StartLocation.Coordinates,
             mission.StartRadiusMeters,
             mission.MinimumPlayers,
             now,
             TimeSpan.FromMinutes(2),
-            maximumAccuracyMeters: 50);
+            maximumAccuracyMeters: 50,
+            isLocationCheckEnabled: mission.IsLocationCheckEnabled);
 
         await sessions.SaveChangesAsync(cancellationToken);
         return ToGamePlayState(session, mission);
@@ -212,6 +216,7 @@ public sealed record GameSessionLobby(
     Guid MissionId,
     string Status,
     DateTimeOffset JoinCodeExpiresAtUtc,
+    bool IsLocationCheckEnabled,
     IReadOnlyCollection<LobbyParticipant> Participants);
 public sealed record LobbyParticipant(
     Guid Id,

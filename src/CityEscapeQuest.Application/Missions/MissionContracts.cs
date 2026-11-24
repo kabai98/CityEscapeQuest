@@ -35,7 +35,8 @@ public sealed record MissionDetails(
     string PreviewImageUrl,
     double StartLatitude,
     double StartLongitude,
-    int StartRadiusMeters)
+    int StartRadiusMeters,
+    bool IsLocationCheckEnabled)
 {
     public static MissionDetails FromMission(Mission mission) => new(
         mission.Id,
@@ -49,5 +50,6 @@ public sealed record MissionDetails(
         mission.PreviewImageUrl,
         mission.StartLocation.Latitude,
         mission.StartLocation.Longitude,
-        mission.StartRadiusMeters);
+        mission.StartRadiusMeters,
+        mission.IsLocationCheckEnabled);
 }

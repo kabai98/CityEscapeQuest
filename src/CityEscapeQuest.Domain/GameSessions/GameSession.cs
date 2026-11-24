@@ -117,7 +117,8 @@ public sealed class GameSession
         int minimumPlayers,
         DateTimeOffset nowUtc,
         TimeSpan maximumLocationAge,
-        double maximumAccuracyMeters)
+        double maximumAccuracyMeters,
+        bool isLocationCheckEnabled = true)
     {
         EnsureLobby();
         if (_participants.Count < minimumPlayers)
@@ -125,24 +126,18 @@ public sealed class GameSession
             throw new DomainException("The mission does not have enough participants.");
         }
 
-        foreach (var participant in _participants)
+        if (isLocationCheckEnabled)
         {
-            var location = participant.GetLocation()
-                ?? throw new DomainException($"Location is missing for participant {participant.Id}.");
-
-            if (location.MeasuredAtUtc < nowUtc - maximumLocationAge)
+            foreach (var participant in _participants)
             {
-                throw new DomainException("Every participant must provide a fresh location.");
-            }
-
-            if (location.AccuracyMeters > maximumAccuracyMeters)
-            {
-                throw new DomainException("Every participant must provide an accurate location.");
-            }
-
-            if (missionStart.DistanceToInMeters(location.Position) > radiusMeters)
-            {
-                throw new DomainException("Every participant must be inside the mission start area.");
+                var location = participant.GetLocation()
+                    ?? throw new DomainException($"Location is missing for participant {participant.Id}.");
+                if (location.MeasuredAtUtc < nowUtc - maximumLocationAge)
+                    throw new DomainException("Every participant must provide a fresh location.");
+                if (location.AccuracyMeters > maximumAccuracyMeters)
+                    throw new DomainException("Every participant must provide an accurate location.");
+                if (missionStart.DistanceToInMeters(location.Position) > radiusMeters)
+                    throw new DomainException("Every participant must be inside the mission start area.");
             }
         }
 

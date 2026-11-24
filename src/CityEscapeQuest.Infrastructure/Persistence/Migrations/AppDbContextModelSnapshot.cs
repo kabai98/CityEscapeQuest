@@ -156,6 +156,11 @@ namespace CityEscapeQuest.Infrastructure.Persistence.Migrations
                     b.Property<int>("EstimatedDurationMinutes")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsLocationCheckEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
 
@@ -179,8 +184,8 @@ namespace CityEscapeQuest.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int>("StartRadiusMeters")
-                        .HasColumnType("int");
+                    b.Property<Guid>("StartLocationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("StoryIntro")
                         .IsRequired()
@@ -199,6 +204,8 @@ namespace CityEscapeQuest.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("StartLocationId");
+
                     b.ToTable("Missions", (string)null);
 
                     b.HasData(
@@ -208,12 +215,13 @@ namespace CityEscapeQuest.Infrastructure.Persistence.Migrations
                             AnswerHash = "",
                             CompletionText = "",
                             EstimatedDurationMinutes = 45,
+                            IsLocationCheckEnabled = true,
                             IsPublished = true,
                             MinimumPlayers = 2,
                             PreviewImageUrl = "/images/missions/danube-message.jpg",
                             RecommendedPlayers = 4,
                             ShortDescription = "Rövid, ingyenes városi nyomozás Budapest szívében.",
-                            StartRadiusMeters = 100,
+                            StartLocationId = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1"),
                             StoryIntro = "",
                             TaskPrompt = "",
                             Title = "A Duna elveszett üzenete"
@@ -224,15 +232,52 @@ namespace CityEscapeQuest.Infrastructure.Persistence.Migrations
                             AnswerHash = "E7F6C011776E8DB7CD330B54174FD76F7D0216B612387A5FFCFB81E6F0919683",
                             CompletionText = "A rézlap fogaskerekei megmozdulnak. A 6-os kód helyes: az órák újra járnak, és az órásmester következő nyoma felvillan a szerkezet belsejében.",
                             EstimatedDurationMinutes = 30,
+                            IsLocationCheckEnabled = true,
                             IsPublished = true,
                             MinimumPlayers = 1,
                             PreviewImageUrl = "/images/missions/clockmaker.jpg",
                             RecommendedPlayers = 3,
                             ShortDescription = "Az eltűnt órásmester utolsó üzenete a Deák térre vezet.",
-                            StartRadiusMeters = 120,
+                            StartLocationId = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2"),
                             StoryIntro = "Budapest központi órái 23:47-nél megálltak. Varga Áron órásmester eltűnt, de egy rézlapot hagyott hátra: a város csak akkor indul újra, ha megtaláljátok a helyreállító számot.",
                             TaskPrompt = "Három föld alatti vonal találkozik ezen a téren. Add össze a vonalak számait, és írd be az eredményt számjeggyel vagy betűvel.",
                             Title = "A rejtélyes órásmester"
+                        });
+                });
+
+            modelBuilder.Entity("CityEscapeQuest.Domain.Missions.MissionLocation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("float");
+
+                    b.Property<int>("RadiusMeters")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MissionLocations", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1"),
+                            Latitude = 47.497900000000001,
+                            Longitude = 19.040199999999999,
+                            RadiusMeters = 100
+                        },
+                        new
+                        {
+                            Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2"),
+                            Latitude = 47.497912999999997,
+                            Longitude = 19.054416,
+                            RadiusMeters = 120
                         });
                 });
 
@@ -488,43 +533,13 @@ namespace CityEscapeQuest.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("CityEscapeQuest.Domain.Missions.Mission", b =>
                 {
-                    b.OwnsOne("CityEscapeQuest.Domain.Missions.GeoPoint", "StartLocation", b1 =>
-                        {
-                            b1.Property<Guid>("MissionId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<double>("Latitude")
-                                .HasColumnType("float")
-                                .HasColumnName("StartLatitude");
-
-                            b1.Property<double>("Longitude")
-                                .HasColumnType("float")
-                                .HasColumnName("StartLongitude");
-
-                            b1.HasKey("MissionId");
-
-                            b1.ToTable("Missions");
-
-                            b1.WithOwner()
-                                .HasForeignKey("MissionId");
-
-                            b1.HasData(
-                                new
-                                {
-                                    MissionId = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1"),
-                                    Latitude = 47.497900000000001,
-                                    Longitude = 19.040199999999999
-                                },
-                                new
-                                {
-                                    MissionId = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2"),
-                                    Latitude = 47.497912999999997,
-                                    Longitude = 19.054416
-                                });
-                        });
-
-                    b.Navigation("StartLocation")
+                    b.HasOne("CityEscapeQuest.Domain.Missions.MissionLocation", "StartLocation")
+                        .WithMany()
+                        .HasForeignKey("StartLocationId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("StartLocation");
                 });
 
             modelBuilder.Entity("CityEscapeQuest.Infrastructure.Identity.RefreshTokenSession", b =>

@@ -21,6 +21,11 @@ export interface MissionDetails extends MissionSummary {
   startRadiusMeters: number;
 }
 
+export interface CreatedGameSession {
+  sessionId: string;
+  joinCode: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MissionApi {
   private readonly http = inject(HttpClient);
@@ -35,6 +40,15 @@ export class MissionApi {
 }
 
 @Injectable({ providedIn: 'root' })
+export class GameSessionApi {
+  private readonly http = inject(HttpClient);
+
+  create(missionId: string): Observable<CreatedGameSession> {
+    return this.http.post<CreatedGameSession>('/api/game-sessions', { missionId });
+  }
+}
+
+@Injectable({ providedIn: 'root' })
 export class AuthApi {
   private readonly http = inject(HttpClient);
 
@@ -44,5 +58,13 @@ export class AuthApi {
 
   register(email: string, password: string, displayName: string): Observable<AuthTokens> {
     return this.http.post<AuthTokens>('/api/auth/register', { email, password, displayName });
+  }
+
+  refresh(refreshToken: string): Observable<AuthTokens> {
+    return this.http.post<AuthTokens>('/api/auth/refresh', { refreshToken });
+  }
+
+  revoke(refreshToken: string): Observable<void> {
+    return this.http.post<void>('/api/auth/revoke', { refreshToken });
   }
 }

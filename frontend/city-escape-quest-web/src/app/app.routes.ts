@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
-import { HomePage, LoginPage, MissionDetailsPage, MissionsPage, ProfilePage } from './pages/pages';
+import { HomePage, LoginPage, MissionsPage, ProfilePage } from './pages/pages';
+import { MissionDetailsPage } from './pages/mission-details.page';
 
 export const routes: Routes = [
   { path: '', component: HomePage, title: 'City Escape Quest' },

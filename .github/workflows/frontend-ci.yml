@@ -33,8 +33,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
-          cache-dependency-path: frontend/city-escape-quest-web/package-lock.json
       - name: Install dependencies
         run: npm install --package-lock-only && npm ci
       - name: Production build

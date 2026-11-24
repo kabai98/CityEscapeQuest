@@ -2,7 +2,7 @@ import { AsyncPipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { catchError, of } from 'rxjs';
+import { catchError, finalize, of } from 'rxjs';
 import { AuthApi, MissionApi, MissionSummary } from '../core/api';
 import { AuthStore } from '../core/auth.store';
 
@@ -161,10 +161,25 @@ export class LoginPage {
   template: `
     <section class="page-head compact"><div class="eyebrow"><span></span>Játékosprofil</div><h1>A te<br><em>kalandnaplód.</em></h1></section>
     <section class="profile-grid">
-      <article class="profile-card"><div class="avatar">CQ</div><h2>{{ auth.isAuthenticated() ? 'Kalandor' : 'Vendég játékos' }}</h2><p>{{ auth.isAuthenticated() ? 'A profilod készen áll a következő küldetésre.' : 'Jelentkezz be az eredményeid és achievementjeid mentéséhez.' }}</p>@if (!auth.isAuthenticated()) { <a class="button primary" routerLink="/login">Belépés</a> } @else { <button class="button ghost" type="button" (click)="auth.clear()">Kijelentkezés</button> }</article>
+      <article class="profile-card"><div class="avatar">CQ</div><h2>{{ auth.isAuthenticated() ? 'Kalandor' : 'Vendég játékos' }}</h2><p>{{ auth.isAuthenticated() ? 'A profilod készen áll a következő küldetésre.' : 'Jelentkezz be az eredményeid és achievementjeid mentéséhez.' }}</p>@if (!auth.isAuthenticated()) { <a class="button primary" routerLink="/login">Belépés</a> } @else { <button class="button ghost" type="button" (click)="logout()">Kijelentkezés</button> }</article>
       <article class="stats"><div><strong>0</strong><span>Teljesített küldetés</span></div><div><strong>0</strong><span>Achievement</span></div><div><strong>—</strong><span>Következő rang</span></div></article>
     </section>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProfilePage { protected readonly auth = inject(AuthStore); }
+export class ProfilePage {
+  protected readonly auth = inject(AuthStore);
+  private readonly api = inject(AuthApi);
+
+  protected logout(): void {
+    const refreshToken = this.auth.tokens()?.refreshToken;
+    if (!refreshToken) {
+      this.auth.clear();
+      return;
+    }
+
+    this.api.revoke(refreshToken)
+      .pipe(finalize(() => this.auth.clear()))
+      .subscribe({ error: () => undefined });
+  }
+}

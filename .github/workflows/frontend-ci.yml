@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - develop
-      - feature/frontend-foundation
+      - 'feature/**'
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend-ci.yml'

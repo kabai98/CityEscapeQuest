@@ -2,6 +2,7 @@ using System.Text;
 using CityEscapeQuest.Application;
 using CityEscapeQuest.Infrastructure;
 using CityEscapeQuest.Infrastructure.Identity;
+using CityEscapeQuest.Infrastructure.Persistence;
 using CityEscapeQuest.WebApi;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
@@ -13,6 +14,19 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddControllers();
+var frontendOrigins = builder.Configuration.GetSection("Frontend:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("frontend", policy =>
+    {
+        if (frontendOrigins.Length > 0)
+        {
+            policy.WithOrigins(frontendOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
+    });
+});
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddHealthChecks();
@@ -76,6 +90,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRateLimiter();
+app.UseCors("frontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
@@ -84,6 +99,7 @@ app.MapHealthChecks("/health/live");
 if (!app.Environment.IsEnvironment("Testing"))
 {
     await IdentitySeeder.SeedRolesAsync(app.Services, app.Lifetime.ApplicationStopping);
+    await MissionSeeder.SeedAsync(app.Services, app.Lifetime.ApplicationStopping);
 }
 
 await app.RunAsync();

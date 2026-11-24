@@ -13,6 +13,9 @@ internal sealed class ParticipantConfiguration : IEntityTypeConfiguration<Partic
         builder.Property(participant => participant.Id).ValueGeneratedNever();
         builder.Property(participant => participant.DisplayName).HasMaxLength(80).IsRequired();
         builder.Property(participant => participant.UserId).HasMaxLength(450);
+        builder.Property(participant => participant.LastLatitude);
+        builder.Property(participant => participant.LastLongitude);
+        builder.Property(participant => participant.LastAccuracyMeters);
         builder.Ignore(participant => participant.IsGuest);
         builder.HasIndex("GameSessionId", nameof(Participant.UserId));
     }

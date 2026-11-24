@@ -17,6 +17,10 @@ internal sealed class MissionConfiguration : IEntityTypeConfiguration<Mission>
         builder.Property(mission => mission.ShortDescription).HasMaxLength(500).IsRequired();
         builder.Property(mission => mission.PreviewImageUrl).HasMaxLength(1_000);
         builder.Property(mission => mission.Price).HasPrecision(18, 2);
+        builder.Property(mission => mission.StoryIntro).HasMaxLength(2_000);
+        builder.Property(mission => mission.TaskPrompt).HasMaxLength(1_000);
+        builder.Property(mission => mission.AnswerHash).HasMaxLength(64);
+        builder.Property(mission => mission.CompletionText).HasMaxLength(2_000);
         builder.Ignore(mission => mission.IsFree);
         builder.OwnsOne(mission => mission.StartLocation, owned =>
         {
@@ -36,24 +40,32 @@ internal sealed class MissionConfiguration : IEntityTypeConfiguration<Mission>
                 Price = (decimal?)null,
                 PreviewImageUrl = "/images/missions/danube-message.jpg",
                 StartRadiusMeters = 100,
-                IsPublished = true
+                IsPublished = true,
+                StoryIntro = "",
+                TaskPrompt = "",
+                AnswerHash = "",
+                CompletionText = ""
             },
             new
             {
                 Id = ClockmakerMissionId,
                 Title = "A rejtélyes órásmester",
-                ShortDescription = "Ingyenes bevezető küldetés a belvárosban.",
-                MinimumPlayers = 2,
+                ShortDescription = "Az eltűnt órásmester utolsó üzenete a Deák térre vezet.",
+                MinimumPlayers = 1,
                 RecommendedPlayers = 3,
                 EstimatedDurationMinutes = 30,
                 Price = (decimal?)null,
                 PreviewImageUrl = "/images/missions/clockmaker.jpg",
-                StartRadiusMeters = 80,
-                IsPublished = true
+                StartRadiusMeters = 120,
+                IsPublished = true,
+                StoryIntro = "Budapest központi órái 23:47-nél megálltak. Varga Áron órásmester eltűnt, de egy rézlapot hagyott hátra: a város csak akkor indul újra, ha megtaláljátok a helyreállító számot.",
+                TaskPrompt = "Három föld alatti vonal találkozik ezen a téren. Add össze a vonalak számait, és írd be az eredményt számjeggyel vagy betűvel.",
+                AnswerHash = "E7F6C011776E8DB7CD330B54174FD76F7D0216B612387A5FFCFB81E6F0919683",
+                CompletionText = "A rézlap fogaskerekei megmozdulnak. A 6-os kód helyes: az órák újra járnak, és az órásmester következő nyoma felvillan a szerkezet belsejében."
             });
 
         builder.OwnsOne(mission => mission.StartLocation).HasData(
             new { MissionId = DanubeMissionId, Latitude = 47.4979, Longitude = 19.0402 },
-            new { MissionId = ClockmakerMissionId, Latitude = 47.5009, Longitude = 19.0456 });
+            new { MissionId = ClockmakerMissionId, Latitude = 47.497913, Longitude = 19.054416 });
     }
 }

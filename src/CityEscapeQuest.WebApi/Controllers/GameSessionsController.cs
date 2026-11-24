@@ -49,20 +49,48 @@ public sealed class GameSessionsController(GameSessionService gameSessions) : Co
     }
 
     [HttpPost("{id:guid}/start")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> Start(
+    [ProducesResponseType<GamePlayState>(StatusCodes.Status200OK)]
+    public Task<GamePlayState> Start(
         Guid id,
-        StartGameSessionRequest request,
+        CancellationToken cancellationToken) =>
+        gameSessions.StartAsync(id, GetUserId(), cancellationToken);
+
+    [HttpPost("{id:guid}/location")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> ReportLocation(
+        Guid id,
+        ReportLocationRequest request,
         CancellationToken cancellationToken)
     {
-        await gameSessions.StartAsync(id, GetUserId(), request.Locations, cancellationToken);
+        await gameSessions.ReportLocationAsync(
+            id,
+            GetUserId(),
+            GetGuestParticipantId(),
+            new LocationInput(request.Latitude, request.Longitude, request.AccuracyMeters, request.MeasuredAtUtc),
+            cancellationToken);
         return NoContent();
     }
+
+    [HttpGet("{id:guid}/state")]
+    [ProducesResponseType<GamePlayState>(StatusCodes.Status200OK)]
+    public Task<GamePlayState> GetState(Guid id, CancellationToken cancellationToken) =>
+        gameSessions.GetGameStateAsync(id, GetUserId(), GetGuestParticipantId(), cancellationToken);
+
+    [HttpPost("{id:guid}/answer")]
+    [ProducesResponseType<GamePlayState>(StatusCodes.Status200OK)]
+    public Task<GamePlayState> SubmitAnswer(
+        Guid id,
+        SubmitAnswerRequest request,
+        CancellationToken cancellationToken) =>
+        gameSessions.SubmitAnswerAsync(id, GetUserId(), GetGuestParticipantId(), request.Answer, cancellationToken);
 
     private string GetUserId() =>
         User.FindFirstValue(ClaimTypes.NameIdentifier)
         ?? User.FindFirstValue("sub")
         ?? throw new UnauthorizedAccessException("User identifier is missing.");
+
+    private Guid? GetGuestParticipantId() =>
+        Guid.TryParse(User.FindFirstValue("participant_id"), out var participantId) ? participantId : null;
 }
 
 public sealed record CreateGameSessionRequest(Guid MissionId);
@@ -70,5 +98,9 @@ public sealed record JoinGameSessionRequest(
     [Required, RegularExpression("^[0-9]{6}$")] string JoinCode,
     [Required, MaxLength(40)] string DisplayName);
 
-public sealed record StartGameSessionRequest(
-    [Required, MinLength(1)] IReadOnlyCollection<LocationInput> Locations);
+public sealed record ReportLocationRequest(
+    [Range(-90, 90)] double Latitude,
+    [Range(-180, 180)] double Longitude,
+    [Range(0.1, 10_000)] double AccuracyMeters,
+    DateTimeOffset MeasuredAtUtc);
+public sealed record SubmitAnswerRequest([Required, MaxLength(100)] string Answer);

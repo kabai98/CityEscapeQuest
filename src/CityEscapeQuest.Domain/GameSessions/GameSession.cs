@@ -36,6 +36,8 @@ public sealed class GameSession
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public DateTimeOffset JoinCodeExpiresAtUtc { get; private set; }
     public DateTimeOffset? StartedAtUtc { get; private set; }
+    public DateTimeOffset? CompletedAtUtc { get; private set; }
+    public int CurrentStage { get; private set; }
     public IReadOnlyCollection<Participant> Participants => _participants.AsReadOnly();
 
     public static GameSession Create(
@@ -95,11 +97,24 @@ public sealed class GameSession
         return AddParticipant(displayName, null);
     }
 
+    public void ReportParticipantLocation(
+        Guid participantId,
+        double latitude,
+        double longitude,
+        double accuracyMeters,
+        DateTimeOffset measuredAtUtc,
+        DateTimeOffset receivedAtUtc)
+    {
+        EnsureLobby();
+        var participant = _participants.SingleOrDefault(item => item.Id == participantId)
+            ?? throw new DomainException("Participant was not found in this session.");
+        participant.ReportLocation(latitude, longitude, accuracyMeters, measuredAtUtc, receivedAtUtc);
+    }
+
     public void Start(
         GeoPoint missionStart,
         int radiusMeters,
         int minimumPlayers,
-        IReadOnlyCollection<ParticipantLocation> locations,
         DateTimeOffset nowUtc,
         TimeSpan maximumLocationAge,
         double maximumAccuracyMeters)
@@ -112,7 +127,7 @@ public sealed class GameSession
 
         foreach (var participant in _participants)
         {
-            var location = locations.SingleOrDefault(item => item.ParticipantId == participant.Id)
+            var location = participant.GetLocation()
                 ?? throw new DomainException($"Location is missing for participant {participant.Id}.");
 
             if (location.MeasuredAtUtc < nowUtc - maximumLocationAge)
@@ -133,6 +148,19 @@ public sealed class GameSession
 
         Status = GameSessionStatus.InProgress;
         StartedAtUtc = nowUtc;
+        CurrentStage = 1;
+    }
+
+    public void Complete(DateTimeOffset nowUtc)
+    {
+        if (Status != GameSessionStatus.InProgress)
+        {
+            throw new DomainException("Only an active game session can be completed.");
+        }
+
+        Status = GameSessionStatus.Completed;
+        CompletedAtUtc = nowUtc;
+        CurrentStage = 2;
     }
 
     private Participant AddParticipant(string displayName, string? userId)

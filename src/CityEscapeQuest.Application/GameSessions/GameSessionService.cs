@@ -85,13 +85,35 @@ public sealed class GameSessionService(
                 participant.Id,
                 participant.DisplayName,
                 participant.IsGuest,
-                string.Equals(participant.UserId, session.OwnerUserId, StringComparison.Ordinal))).ToArray());
+                string.Equals(participant.UserId, session.OwnerUserId, StringComparison.Ordinal),
+                IsCurrentParticipant(participant, subjectId, guestParticipantId),
+                participant.IsLocationReady(timeProvider.GetUtcNow(), TimeSpan.FromMinutes(2), 50))).ToArray());
     }
 
-    public async Task StartAsync(
+    public async Task ReportLocationAsync(
+        Guid sessionId,
+        string subjectId,
+        Guid? guestParticipantId,
+        LocationInput location,
+        CancellationToken cancellationToken)
+    {
+        var session = await sessions.GetAsync(sessionId, cancellationToken)
+            ?? throw new KeyNotFoundException("Game session was not found.");
+        var participant = GetCurrentParticipant(session, subjectId, guestParticipantId);
+        var now = timeProvider.GetUtcNow();
+        session.ReportParticipantLocation(
+            participant.Id,
+            location.Latitude,
+            location.Longitude,
+            location.AccuracyMeters,
+            location.MeasuredAtUtc,
+            now);
+        await sessions.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<GamePlayState> StartAsync(
         Guid sessionId,
         string requestingUserId,
-        IReadOnlyCollection<LocationInput> locations,
         CancellationToken cancellationToken)
     {
         var session = await sessions.GetAsync(sessionId, cancellationToken)
@@ -106,23 +128,73 @@ public sealed class GameSessionService(
             ?? throw new KeyNotFoundException("Mission was not found.");
 
         var now = timeProvider.GetUtcNow();
-        var domainLocations = locations.Select(location => new ParticipantLocation(
-            location.ParticipantId,
-            new GeoPoint(location.Latitude, location.Longitude),
-            location.AccuracyMeters,
-            location.MeasuredAtUtc)).ToArray();
-
         session.Start(
             mission.StartLocation,
             mission.StartRadiusMeters,
             mission.MinimumPlayers,
-            domainLocations,
             now,
             TimeSpan.FromMinutes(2),
             maximumAccuracyMeters: 50);
 
         await sessions.SaveChangesAsync(cancellationToken);
+        return ToGamePlayState(session, mission);
     }
+
+    public async Task<GamePlayState> GetGameStateAsync(
+        Guid sessionId,
+        string subjectId,
+        Guid? guestParticipantId,
+        CancellationToken cancellationToken)
+    {
+        var session = await sessions.GetAsync(sessionId, cancellationToken)
+            ?? throw new KeyNotFoundException("Game session was not found.");
+        _ = GetCurrentParticipant(session, subjectId, guestParticipantId);
+        var mission = await missions.GetAsync(session.MissionId, cancellationToken)
+            ?? throw new KeyNotFoundException("Mission was not found.");
+        return ToGamePlayState(session, mission);
+    }
+
+    public async Task<GamePlayState> SubmitAnswerAsync(
+        Guid sessionId,
+        string subjectId,
+        Guid? guestParticipantId,
+        string answer,
+        CancellationToken cancellationToken)
+    {
+        var session = await sessions.GetAsync(sessionId, cancellationToken)
+            ?? throw new KeyNotFoundException("Game session was not found.");
+        _ = GetCurrentParticipant(session, subjectId, guestParticipantId);
+        var mission = await missions.GetAsync(session.MissionId, cancellationToken)
+            ?? throw new KeyNotFoundException("Mission was not found.");
+        if (!mission.IsCorrectAnswer(answer))
+        {
+            throw new Domain.Common.DomainException("The submitted answer is not correct.");
+        }
+
+        session.Complete(timeProvider.GetUtcNow());
+        await sessions.SaveChangesAsync(cancellationToken);
+        return ToGamePlayState(session, mission);
+    }
+
+    private static Participant GetCurrentParticipant(GameSession session, string subjectId, Guid? guestParticipantId) =>
+        session.Participants.SingleOrDefault(participant =>
+            string.Equals(participant.UserId, subjectId, StringComparison.Ordinal)
+            || participant.Id == guestParticipantId)
+        ?? throw new UnauthorizedAccessException("The caller is not a participant of this game session.");
+
+    private static bool IsCurrentParticipant(Participant participant, string subjectId, Guid? guestParticipantId) =>
+        string.Equals(participant.UserId, subjectId, StringComparison.Ordinal)
+        || participant.Id == guestParticipantId;
+
+    private static GamePlayState ToGamePlayState(GameSession session, Mission mission) => new(
+        session.Id,
+        session.Status.ToString(),
+        mission.Title,
+        mission.StoryIntro,
+        session.Status == GameSessionStatus.InProgress ? mission.TaskPrompt : null,
+        session.Status == GameSessionStatus.Completed ? mission.CompletionText : null,
+        session.StartedAtUtc,
+        session.CompletedAtUtc);
 
     private static string CreateJoinCode() => RandomNumberGenerator.GetInt32(100_000, 1_000_000).ToString();
 
@@ -141,10 +213,25 @@ public sealed record GameSessionLobby(
     string Status,
     DateTimeOffset JoinCodeExpiresAtUtc,
     IReadOnlyCollection<LobbyParticipant> Participants);
-public sealed record LobbyParticipant(Guid Id, string DisplayName, bool IsGuest, bool IsOwner);
+public sealed record LobbyParticipant(
+    Guid Id,
+    string DisplayName,
+    bool IsGuest,
+    bool IsOwner,
+    bool IsCurrent,
+    bool IsLocationReady);
+
+public sealed record GamePlayState(
+    Guid SessionId,
+    string Status,
+    string MissionTitle,
+    string StoryIntro,
+    string? TaskPrompt,
+    string? CompletionText,
+    DateTimeOffset? StartedAtUtc,
+    DateTimeOffset? CompletedAtUtc);
 
 public sealed record LocationInput(
-    Guid ParticipantId,
     double Latitude,
     double Longitude,
     double AccuracyMeters,

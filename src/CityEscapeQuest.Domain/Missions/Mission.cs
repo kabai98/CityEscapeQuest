@@ -1,4 +1,6 @@
 using CityEscapeQuest.Domain.Common;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace CityEscapeQuest.Domain.Missions;
 
@@ -18,7 +20,11 @@ public sealed class Mission
         decimal? price,
         string previewImageUrl,
         GeoPoint startLocation,
-        int startRadiusMeters)
+        int startRadiusMeters,
+        string storyIntro = "",
+        string taskPrompt = "",
+        string answerHash = "",
+        string completionText = "")
     {
         if (string.IsNullOrWhiteSpace(title))
         {
@@ -45,6 +51,10 @@ public sealed class Mission
         PreviewImageUrl = previewImageUrl.Trim();
         StartLocation = startLocation;
         StartRadiusMeters = startRadiusMeters;
+        StoryIntro = storyIntro.Trim();
+        TaskPrompt = taskPrompt.Trim();
+        AnswerHash = answerHash;
+        CompletionText = completionText.Trim();
     }
 
     public Guid Id { get; private set; }
@@ -59,4 +69,26 @@ public sealed class Mission
     public GeoPoint StartLocation { get; private set; } = null!;
     public int StartRadiusMeters { get; private set; }
     public bool IsPublished { get; private set; } = true;
+    public string StoryIntro { get; private set; } = string.Empty;
+    public string TaskPrompt { get; private set; } = string.Empty;
+    public string AnswerHash { get; private set; } = string.Empty;
+    public string CompletionText { get; private set; } = string.Empty;
+
+    public bool IsCorrectAnswer(string answer)
+    {
+        if (string.IsNullOrWhiteSpace(AnswerHash) || string.IsNullOrWhiteSpace(answer))
+        {
+            return false;
+        }
+
+        var normalized = answer.Trim().ToUpperInvariant();
+        if (normalized == "HAT")
+        {
+            normalized = "6";
+        }
+        var suppliedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalized)));
+        return CryptographicOperations.FixedTimeEquals(
+            Convert.FromHexString(AnswerHash),
+            Convert.FromHexString(suppliedHash));
+    }
 }

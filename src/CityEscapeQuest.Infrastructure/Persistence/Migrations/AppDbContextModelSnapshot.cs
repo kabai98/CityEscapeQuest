@@ -57,8 +57,14 @@ namespace CityEscapeQuest.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset?>("CompletedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("CurrentStage")
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("JoinCodeExpiresAtUtc")
                         .HasColumnType("datetimeoffset");
@@ -95,7 +101,6 @@ namespace CityEscapeQuest.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("CityEscapeQuest.Domain.GameSessions.Participant", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DisplayName")
@@ -105,6 +110,21 @@ namespace CityEscapeQuest.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("GameSessionId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<double?>("LastAccuracyMeters")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("LastLatitude")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("LastLongitude")
+                        .HasColumnType("float");
+
+                    b.Property<DateTimeOffset?>("LocationMeasuredAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("LocationReceivedAtUtc")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("UserId")
                         .HasMaxLength(450)
@@ -122,6 +142,16 @@ namespace CityEscapeQuest.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AnswerHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("CompletionText")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<int>("EstimatedDurationMinutes")
                         .HasColumnType("int");
@@ -152,6 +182,16 @@ namespace CityEscapeQuest.Infrastructure.Persistence.Migrations
                     b.Property<int>("StartRadiusMeters")
                         .HasColumnType("int");
 
+                    b.Property<string>("StoryIntro")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("TaskPrompt")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(160)
@@ -165,6 +205,8 @@ namespace CityEscapeQuest.Infrastructure.Persistence.Migrations
                         new
                         {
                             Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1"),
+                            AnswerHash = "",
+                            CompletionText = "",
                             EstimatedDurationMinutes = 45,
                             IsPublished = true,
                             MinimumPlayers = 2,
@@ -172,18 +214,24 @@ namespace CityEscapeQuest.Infrastructure.Persistence.Migrations
                             RecommendedPlayers = 4,
                             ShortDescription = "Rövid, ingyenes városi nyomozás Budapest szívében.",
                             StartRadiusMeters = 100,
+                            StoryIntro = "",
+                            TaskPrompt = "",
                             Title = "A Duna elveszett üzenete"
                         },
                         new
                         {
                             Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2"),
+                            AnswerHash = "E7F6C011776E8DB7CD330B54174FD76F7D0216B612387A5FFCFB81E6F0919683",
+                            CompletionText = "A rézlap fogaskerekei megmozdulnak. A 6-os kód helyes: az órák újra járnak, és az órásmester következő nyoma felvillan a szerkezet belsejében.",
                             EstimatedDurationMinutes = 30,
                             IsPublished = true,
-                            MinimumPlayers = 2,
+                            MinimumPlayers = 1,
                             PreviewImageUrl = "/images/missions/clockmaker.jpg",
                             RecommendedPlayers = 3,
-                            ShortDescription = "Ingyenes bevezető küldetés a belvárosban.",
-                            StartRadiusMeters = 80,
+                            ShortDescription = "Az eltűnt órásmester utolsó üzenete a Deák térre vezet.",
+                            StartRadiusMeters = 120,
+                            StoryIntro = "Budapest központi órái 23:47-nél megálltak. Varga Áron órásmester eltűnt, de egy rézlapot hagyott hátra: a város csak akkor indul újra, ha megtaláljátok a helyreállító számot.",
+                            TaskPrompt = "Három föld alatti vonal találkozik ezen a téren. Add össze a vonalak számait, és írd be az eredményt számjeggyel vagy betűvel.",
                             Title = "A rejtélyes órásmester"
                         });
                 });
@@ -470,8 +518,8 @@ namespace CityEscapeQuest.Infrastructure.Persistence.Migrations
                                 new
                                 {
                                     MissionId = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2"),
-                                    Latitude = 47.500900000000001,
-                                    Longitude = 19.0456
+                                    Latitude = 47.497912999999997,
+                                    Longitude = 19.054416
                                 });
                         });
 

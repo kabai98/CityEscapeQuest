@@ -39,6 +39,19 @@ export interface LobbyParticipant {
   displayName: string;
   isGuest: boolean;
   isOwner: boolean;
+  isCurrent: boolean;
+  isLocationReady: boolean;
+}
+
+export interface GamePlayState {
+  sessionId: string;
+  status: string;
+  missionTitle: string;
+  storyIntro: string;
+  taskPrompt: string | null;
+  completionText: string | null;
+  startedAtUtc: string | null;
+  completedAtUtc: string | null;
 }
 
 export interface GameSessionLobby {
@@ -76,6 +89,33 @@ export class GameSessionApi {
 
   getLobby(sessionId: string): Observable<GameSessionLobby> {
     return this.http.get<GameSessionLobby>(`/api/game-sessions/${sessionId}`);
+  }
+
+  reportLocation(
+    sessionId: string,
+    latitude: number,
+    longitude: number,
+    accuracyMeters: number,
+    measuredAtUtc: string
+  ): Observable<void> {
+    return this.http.post<void>(`/api/game-sessions/${sessionId}/location`, {
+      latitude,
+      longitude,
+      accuracyMeters,
+      measuredAtUtc
+    });
+  }
+
+  start(sessionId: string): Observable<GamePlayState> {
+    return this.http.post<GamePlayState>(`/api/game-sessions/${sessionId}/start`, {});
+  }
+
+  getState(sessionId: string): Observable<GamePlayState> {
+    return this.http.get<GamePlayState>(`/api/game-sessions/${sessionId}/state`);
+  }
+
+  submitAnswer(sessionId: string, answer: string): Observable<GamePlayState> {
+    return this.http.post<GamePlayState>(`/api/game-sessions/${sessionId}/answer`, { answer });
   }
 }
 

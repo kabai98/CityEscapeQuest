@@ -66,11 +66,12 @@ A `Mission` az újrajátszható küldetéssablon. A `GameSession` egy csapat kon
 
 ```text
 CityEscapeQuest.slnx
-├── src/
-│   ├── CityEscapeQuest.Domain/
-│   ├── CityEscapeQuest.Application/
-│   ├── CityEscapeQuest.Infrastructure/
-│   └── CityEscapeQuest.WebApi/
+├── backend/
+│   └── src/
+│       ├── CityEscapeQuest.Domain/
+│       ├── CityEscapeQuest.Application/
+│       ├── CityEscapeQuest.Infrastructure/
+│       └── CityEscapeQuest.WebApi/
 ├── tests/
 │   ├── CityEscapeQuest.Domain.UnitTests/
 │   ├── CityEscapeQuest.Application.UnitTests/
@@ -87,9 +88,9 @@ Szükséges: .NET SDK 10.0.301 vagy kompatibilis patch verzió, Node.js/npm, val
 ```powershell
 dotnet restore CityEscapeQuest.slnx
 dotnet ef database update `
-  --project src/CityEscapeQuest.Infrastructure `
-  --startup-project src/CityEscapeQuest.WebApi
-dotnet run --project src/CityEscapeQuest.WebApi
+  --project backend/src/CityEscapeQuest.Infrastructure `
+  --startup-project backend/src/CityEscapeQuest.WebApi
+dotnet run --project backend/src/CityEscapeQuest.WebApi
 ```
 
 Egy külön terminálban:

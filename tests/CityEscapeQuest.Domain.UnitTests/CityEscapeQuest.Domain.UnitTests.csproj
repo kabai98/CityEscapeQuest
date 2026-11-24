@@ -4,7 +4,7 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/CityEscapeQuest.Domain/CityEscapeQuest.Domain.csproj" />
+    <ProjectReference Include="../../backend/src/CityEscapeQuest.Domain/CityEscapeQuest.Domain.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio">

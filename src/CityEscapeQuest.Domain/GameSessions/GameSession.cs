@@ -1,0 +1,121 @@
+using CityEscapeQuest.Domain.Common;
+using CityEscapeQuest.Domain.Missions;
+
+namespace CityEscapeQuest.Domain.GameSessions;
+
+public sealed class GameSession
+{
+    private readonly List<Participant> _participants = [];
+
+    private GameSession()
+    {
+    }
+
+    private GameSession(Guid id, Guid missionId, string ownerUserId, string joinCodeHash)
+    {
+        Id = id;
+        MissionId = missionId;
+        OwnerUserId = ownerUserId;
+        JoinCodeHash = joinCodeHash;
+        Status = GameSessionStatus.Lobby;
+        CreatedAtUtc = DateTimeOffset.UtcNow;
+    }
+
+    public Guid Id { get; private set; }
+    public Guid MissionId { get; private set; }
+    public string OwnerUserId { get; private set; } = string.Empty;
+    public string JoinCodeHash { get; private set; } = string.Empty;
+    public GameSessionStatus Status { get; private set; }
+    public DateTimeOffset CreatedAtUtc { get; private set; }
+    public DateTimeOffset? StartedAtUtc { get; private set; }
+    public IReadOnlyCollection<Participant> Participants => _participants.AsReadOnly();
+
+    public static GameSession Create(Guid missionId, string ownerUserId, string ownerDisplayName, string joinCodeHash)
+    {
+        if (string.IsNullOrWhiteSpace(ownerUserId) || string.IsNullOrWhiteSpace(joinCodeHash))
+        {
+            throw new DomainException("Owner and join code are required.");
+        }
+
+        var session = new GameSession(Guid.NewGuid(), missionId, ownerUserId, joinCodeHash);
+        session.AddRegisteredParticipant(ownerUserId, ownerDisplayName);
+        return session;
+    }
+
+    public Participant AddRegisteredParticipant(string userId, string displayName)
+    {
+        EnsureLobby();
+        if (_participants.Any(participant => participant.UserId == userId))
+        {
+            throw new DomainException("The user has already joined this session.");
+        }
+
+        return AddParticipant(displayName, userId);
+    }
+
+    public Participant AddGuest(string displayName)
+    {
+        EnsureLobby();
+        return AddParticipant(displayName, null);
+    }
+
+    public void Start(
+        GeoPoint missionStart,
+        int radiusMeters,
+        int minimumPlayers,
+        IReadOnlyCollection<ParticipantLocation> locations,
+        DateTimeOffset nowUtc,
+        TimeSpan maximumLocationAge,
+        double maximumAccuracyMeters)
+    {
+        EnsureLobby();
+        if (_participants.Count < minimumPlayers)
+        {
+            throw new DomainException("The mission does not have enough participants.");
+        }
+
+        foreach (var participant in _participants)
+        {
+            var location = locations.SingleOrDefault(item => item.ParticipantId == participant.Id)
+                ?? throw new DomainException($"Location is missing for participant {participant.Id}.");
+
+            if (location.MeasuredAtUtc < nowUtc - maximumLocationAge)
+            {
+                throw new DomainException("Every participant must provide a fresh location.");
+            }
+
+            if (location.AccuracyMeters > maximumAccuracyMeters)
+            {
+                throw new DomainException("Every participant must provide an accurate location.");
+            }
+
+            if (missionStart.DistanceToInMeters(location.Position) > radiusMeters)
+            {
+                throw new DomainException("Every participant must be inside the mission start area.");
+            }
+        }
+
+        Status = GameSessionStatus.InProgress;
+        StartedAtUtc = nowUtc;
+    }
+
+    private Participant AddParticipant(string displayName, string? userId)
+    {
+        if (string.IsNullOrWhiteSpace(displayName))
+        {
+            throw new DomainException("Display name is required.");
+        }
+
+        var participant = new Participant(Guid.NewGuid(), displayName, userId);
+        _participants.Add(participant);
+        return participant;
+    }
+
+    private void EnsureLobby()
+    {
+        if (Status != GameSessionStatus.Lobby)
+        {
+            throw new DomainException("The game session is not in the lobby state.");
+        }
+    }
+}

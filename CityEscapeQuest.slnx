@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CityEscapeQuest.Domain/CityEscapeQuest.Domain.csproj" />
+    <Project Path="src/CityEscapeQuest.Application/CityEscapeQuest.Application.csproj" />
+    <Project Path="src/CityEscapeQuest.Infrastructure/CityEscapeQuest.Infrastructure.csproj" />
+    <Project Path="src/CityEscapeQuest.WebApi/CityEscapeQuest.WebApi.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CityEscapeQuest.Domain.UnitTests/CityEscapeQuest.Domain.UnitTests.csproj" />
+    <Project Path="tests/CityEscapeQuest.Application.UnitTests/CityEscapeQuest.Application.UnitTests.csproj" />
+    <Project Path="tests/CityEscapeQuest.Infrastructure.IntegrationTests/CityEscapeQuest.Infrastructure.IntegrationTests.csproj" />
+    <Project Path="tests/CityEscapeQuest.WebApi.IntegrationTests/CityEscapeQuest.WebApi.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

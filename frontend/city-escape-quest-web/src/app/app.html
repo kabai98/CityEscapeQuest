@@ -1,0 +1,26 @@
+<header class="site-header">
+  <a class="brand" routerLink="/" (click)="closeMenu()" aria-label="City Escape Quest kezdőlap">
+    <span class="brand-mark" aria-hidden="true">CQ</span>
+    <span><strong>City Escape</strong><small>Quest</small></span>
+  </a>
+  <button class="menu-button" type="button" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen" aria-label="Menü">
+    <span></span><span></span><span></span>
+  </button>
+  <nav [class.open]="menuOpen" aria-label="Fő navigáció">
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">Kezdőlap</a>
+    <a routerLink="/missions" routerLinkActive="active" (click)="closeMenu()">Küldetések</a>
+    <a routerLink="/profile" routerLinkActive="active" (click)="closeMenu()">Profil</a>
+    <a class="nav-cta" routerLink="/login" (click)="closeMenu()">{{ auth.isAuthenticated() ? 'Fiókom' : 'Belépés' }}</a>
+  </nav>
+</header>
+
+<main>
+  <router-outlet />
+</main>
+
+<footer>
+  <a class="brand footer-brand" routerLink="/"><span class="brand-mark">CQ</span><span><strong>City Escape</strong><small>Quest</small></span></a>
+  <p>A város a játéktér. A csapatod írja a történetet.</p>
+  <div><a routerLink="/missions">Küldetések</a><a routerLink="/profile">Profil</a></div>
+  <small>© 2026 City Escape Quest</small>
+</footer>

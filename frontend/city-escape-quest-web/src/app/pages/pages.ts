@@ -83,17 +83,18 @@ export class MissionDetailsPage { readonly id = input<string>(); }
   imports: [ReactiveFormsModule],
   template: `
     <section class="auth-shell">
-      <div><div class="eyebrow"><span></span>Belépés a kalandba</div><h1>{{ guestMode() ? 'Csatlakozz a csapathoz.' : 'Folytasd a történeted.' }}</h1><p>{{ guestMode() ? 'Nem kell regisztrálnod. Add meg a csapatkódot és a neved.' : 'Lépj be a küldetéseidhez, achievementjeidhez és csapataidhoz.' }}</p></div>
-      <form [formGroup]="guestMode() ? guestForm : loginForm" (ngSubmit)="submit()">
-        <div class="auth-tabs"><button type="button" [class.active]="!guestMode()" (click)="guestMode.set(false)">Fiókkal</button><button type="button" [class.active]="guestMode()" (click)="guestMode.set(true)">Vendégként</button></div>
+      <div><div class="eyebrow"><span></span>Belépés a kalandba</div><h1>{{ guestMode() ? 'Csatlakozz a csapathoz.' : (registerMode() ? 'Kezdődjön a történeted.' : 'Folytasd a történeted.') }}</h1><p>{{ guestMode() ? 'Nem kell regisztrálnod. Add meg a csapatkódot és a neved.' : (registerMode() ? 'Hozd létre a játékosprofilodat néhány lépésben.' : 'Lépj be a küldetéseidhez, achievementjeidhez és csapataidhoz.') }}</p></div>
+      <form [formGroup]="activeForm" (ngSubmit)="submit()">
+        <div class="auth-tabs"><button type="button" [class.active]="!guestMode() && !registerMode()" (click)="selectMode('login')">Belépés</button><button type="button" [class.active]="registerMode()" (click)="selectMode('register')">Regisztráció</button><button type="button" [class.active]="guestMode()" (click)="selectMode('guest')">Vendég</button></div>
         @if (guestMode()) {
-          <label>Csapatkód<input formControlName="joinCode" inputmode="numeric" placeholder="123 456"></label>
+          <label>Csapatkód<input formControlName="joinCode" inputmode="numeric" placeholder="123456"></label>
           <label>Megjelenő név<input formControlName="displayName" autocomplete="nickname" placeholder="Hogy szólíthatunk?"></label>
         } @else {
+          @if (registerMode()) { <label>Megjelenő név<input formControlName="displayName" autocomplete="nickname" placeholder="Hogy szólíthatunk?"></label> }
           <label>E-mail<input formControlName="email" type="email" autocomplete="email" placeholder="nev@pelda.hu"></label>
-          <label>Jelszó<input formControlName="password" type="password" autocomplete="current-password" placeholder="Legalább 10 karakter"></label>
+          <label>Jelszó<input formControlName="password" type="password" [attr.autocomplete]="registerMode() ? 'new-password' : 'current-password'" placeholder="Legalább 10 karakter"></label>
         }
-        <button class="button primary full" type="submit" [disabled]="busy()">{{ busy() ? 'Kapcsolódás…' : (guestMode() ? 'Csatlakozás' : 'Belépés') }}</button>
+        <button class="button primary full" type="submit" [disabled]="busy()">{{ busy() ? 'Kapcsolódás…' : (guestMode() ? 'Csatlakozás' : (registerMode() ? 'Fiók létrehozása' : 'Belépés')) }}</button>
         @if (message()) { <p class="form-message">{{ message() }}</p> }
       </form>
     </section>
@@ -105,32 +106,51 @@ export class LoginPage {
   private readonly store = inject(AuthStore);
   private readonly router = inject(Router);
   protected readonly guestMode = signal(false);
+  protected readonly registerMode = signal(false);
   protected readonly busy = signal(false);
   protected readonly message = signal('');
   protected readonly loginForm = new FormGroup({
     email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
     password: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(10)] })
   });
+  protected readonly registerForm = new FormGroup({
+    displayName: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(80)] }),
+    email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
+    password: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(10)] })
+  });
   protected readonly guestForm = new FormGroup({
-    joinCode: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/^\d{6}$/)] }),
+    joinCode: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/^\\d{6}$/)] }),
     displayName: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(80)] })
   });
+  protected get activeForm(): FormGroup {
+    return this.guestMode() ? this.guestForm : (this.registerMode() ? this.registerForm : this.loginForm);
+  }
+
+  protected selectMode(mode: 'login' | 'register' | 'guest'): void {
+    this.guestMode.set(mode === 'guest');
+    this.registerMode.set(mode === 'register');
+    this.message.set('');
+  }
 
   protected submit(): void {
+    const form = this.activeForm;
+    if (form.invalid) {
+      form.markAllAsTouched();
+      this.message.set('Ellenőrizd a megadott adatokat.');
+      return;
+    }
     if (this.guestMode()) {
       this.message.set('A vendég csatlakozási végpont a következő backend iterációban készül el.');
       return;
     }
-    if (this.loginForm.invalid) {
-      this.loginForm.markAllAsTouched();
-      this.message.set('Ellenőrizd a megadott adatokat.');
-      return;
-    }
     this.busy.set(true);
-    const { email, password } = this.loginForm.getRawValue();
-    this.api.login(email, password).subscribe({
+    const credentials = this.registerMode() ? this.registerForm.getRawValue() : this.loginForm.getRawValue();
+    const request = this.registerMode()
+      ? this.api.register(credentials.email, credentials.password, this.registerForm.controls.displayName.value)
+      : this.api.login(credentials.email, credentials.password);
+    request.subscribe({
       next: tokens => { this.store.set(tokens); void this.router.navigateByUrl('/profile'); },
-      error: () => { this.busy.set(false); this.message.set('A belépés nem sikerült. Ellenőrizd az adatokat és az API kapcsolatot.'); }
+      error: () => { this.busy.set(false); this.message.set('A művelet nem sikerült. Ellenőrizd az adatokat és az API kapcsolatot.'); }
     });
   }
 }

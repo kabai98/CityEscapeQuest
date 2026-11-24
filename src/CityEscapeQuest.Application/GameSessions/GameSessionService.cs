@@ -9,6 +9,7 @@ namespace CityEscapeQuest.Application.GameSessions;
 public sealed class GameSessionService(
     IGameSessionRepository sessions,
     IMissionRepository missions,
+    IGuestAccessTokenService guestAccessTokens,
     TimeProvider timeProvider)
 {
     public async Task<CreatedGameSession> CreateAsync(
@@ -21,10 +22,70 @@ public sealed class GameSessionService(
             ?? throw new KeyNotFoundException("Mission was not found.");
 
         var joinCode = CreateJoinCode();
-        var session = GameSession.Create(missionId, ownerUserId, ownerDisplayName, Hash(joinCode));
+        var now = timeProvider.GetUtcNow();
+        var session = GameSession.Create(
+            missionId,
+            ownerUserId,
+            ownerDisplayName,
+            Hash(joinCode),
+            now,
+            now.AddHours(2));
         await sessions.AddAsync(session, cancellationToken);
         await sessions.SaveChangesAsync(cancellationToken);
-        return new CreatedGameSession(session.Id, joinCode);
+        return new CreatedGameSession(session.Id, joinCode, session.JoinCodeExpiresAtUtc);
+    }
+
+    public async Task<JoinedGameSession> JoinAsync(
+        string joinCode,
+        string displayName,
+        string? registeredUserId,
+        CancellationToken cancellationToken)
+    {
+        var session = await sessions.GetByJoinCodeHashAsync(Hash(joinCode), cancellationToken)
+            ?? throw new KeyNotFoundException("Game session was not found.");
+        var now = timeProvider.GetUtcNow();
+
+        if (!string.IsNullOrWhiteSpace(registeredUserId))
+        {
+            var participant = session.JoinRegisteredParticipant(registeredUserId, displayName, now);
+            await sessions.SaveChangesAsync(cancellationToken);
+            return new JoinedGameSession(session.Id, participant.Id, null, null);
+        }
+
+        var guest = session.AddGuest(displayName, now);
+        var token = guestAccessTokens.Issue(session.Id, guest.Id, guest.DisplayName);
+        await sessions.SaveChangesAsync(cancellationToken);
+        return new JoinedGameSession(session.Id, guest.Id, token.AccessToken, token.ExpiresAtUtc);
+    }
+
+    public async Task<GameSessionLobby> GetLobbyAsync(
+        Guid sessionId,
+        string subjectId,
+        Guid? guestParticipantId,
+        CancellationToken cancellationToken)
+    {
+        var session = await sessions.GetAsync(sessionId, cancellationToken)
+            ?? throw new KeyNotFoundException("Game session was not found.");
+
+        var canView = string.Equals(session.OwnerUserId, subjectId, StringComparison.Ordinal)
+            || session.Participants.Any(participant =>
+                string.Equals(participant.UserId, subjectId, StringComparison.Ordinal)
+                || participant.Id == guestParticipantId);
+        if (!canView)
+        {
+            throw new UnauthorizedAccessException("The caller is not a participant of this game session.");
+        }
+
+        return new GameSessionLobby(
+            session.Id,
+            session.MissionId,
+            session.Status.ToString(),
+            session.JoinCodeExpiresAtUtc,
+            session.Participants.Select(participant => new LobbyParticipant(
+                participant.Id,
+                participant.DisplayName,
+                participant.IsGuest,
+                string.Equals(participant.UserId, session.OwnerUserId, StringComparison.Ordinal))).ToArray());
     }
 
     public async Task StartAsync(
@@ -68,7 +129,19 @@ public sealed class GameSessionService(
     private static string Hash(string value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
 }
 
-public sealed record CreatedGameSession(Guid SessionId, string JoinCode);
+public sealed record CreatedGameSession(Guid SessionId, string JoinCode, DateTimeOffset JoinCodeExpiresAtUtc);
+public sealed record JoinedGameSession(
+    Guid SessionId,
+    Guid ParticipantId,
+    string? AccessToken,
+    DateTimeOffset? AccessTokenExpiresAtUtc);
+public sealed record GameSessionLobby(
+    Guid SessionId,
+    Guid MissionId,
+    string Status,
+    DateTimeOffset JoinCodeExpiresAtUtc,
+    IReadOnlyCollection<LobbyParticipant> Participants);
+public sealed record LobbyParticipant(Guid Id, string DisplayName, bool IsGuest, bool IsOwner);
 
 public sealed record LocationInput(
     Guid ParticipantId,

@@ -3,6 +3,7 @@ using System.Security.Claims;
 using CityEscapeQuest.Application.GameSessions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace CityEscapeQuest.WebApi.Controllers;
 
@@ -11,6 +12,28 @@ namespace CityEscapeQuest.WebApi.Controllers;
 [Route("api/game-sessions")]
 public sealed class GameSessionsController(GameSessionService gameSessions) : ControllerBase
 {
+    [AllowAnonymous]
+    [EnableRateLimiting("guest-join")]
+    [HttpPost("join")]
+    [ProducesResponseType<JoinedGameSession>(StatusCodes.Status200OK)]
+    public Task<JoinedGameSession> Join(
+        JoinGameSessionRequest request,
+        CancellationToken cancellationToken) =>
+        gameSessions.JoinAsync(
+            request.JoinCode,
+            request.DisplayName,
+            User.Identity?.IsAuthenticated == true ? GetUserId() : null,
+            cancellationToken);
+
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType<GameSessionLobby>(StatusCodes.Status200OK)]
+    public Task<GameSessionLobby> GetLobby(Guid id, CancellationToken cancellationToken)
+    {
+        var participantClaim = User.FindFirstValue("participant_id");
+        var guestParticipantId = Guid.TryParse(participantClaim, out var parsed) ? parsed : (Guid?)null;
+        return gameSessions.GetLobbyAsync(id, GetUserId(), guestParticipantId, cancellationToken);
+    }
+
     [HttpPost]
     [ProducesResponseType<CreatedGameSession>(StatusCodes.Status201Created)]
     public async Task<ActionResult<CreatedGameSession>> Create(
@@ -43,6 +66,9 @@ public sealed class GameSessionsController(GameSessionService gameSessions) : Co
 }
 
 public sealed record CreateGameSessionRequest(Guid MissionId);
+public sealed record JoinGameSessionRequest(
+    [Required, RegularExpression("^[0-9]{6}$")] string JoinCode,
+    [Required, MaxLength(40)] string DisplayName);
 
 public sealed record StartGameSessionRequest(
-    [property: Required, MinLength(1)] IReadOnlyCollection<LocationInput> Locations);
+    [Required, MinLength(1)] IReadOnlyCollection<LocationInput> Locations);

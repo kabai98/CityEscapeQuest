@@ -21,6 +21,11 @@ coverage/
 *.coverage
 *.coveragexml
 
+# Frontend dependencies and generated output
+**/node_modules/
+**/.angular/
+**/dist/
+
 # Local configuration and secrets
 appsettings.Local.json
 appsettings.*.local.json

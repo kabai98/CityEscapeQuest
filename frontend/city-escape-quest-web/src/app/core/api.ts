@@ -24,6 +24,29 @@ export interface MissionDetails extends MissionSummary {
 export interface CreatedGameSession {
   sessionId: string;
   joinCode: string;
+  joinCodeExpiresAtUtc: string;
+}
+
+export interface JoinedGameSession {
+  sessionId: string;
+  participantId: string;
+  accessToken: string | null;
+  accessTokenExpiresAtUtc: string | null;
+}
+
+export interface LobbyParticipant {
+  id: string;
+  displayName: string;
+  isGuest: boolean;
+  isOwner: boolean;
+}
+
+export interface GameSessionLobby {
+  sessionId: string;
+  missionId: string;
+  status: string;
+  joinCodeExpiresAtUtc: string;
+  participants: readonly LobbyParticipant[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -45,6 +68,14 @@ export class GameSessionApi {
 
   create(missionId: string): Observable<CreatedGameSession> {
     return this.http.post<CreatedGameSession>('/api/game-sessions', { missionId });
+  }
+
+  join(joinCode: string, displayName: string): Observable<JoinedGameSession> {
+    return this.http.post<JoinedGameSession>('/api/game-sessions/join', { joinCode, displayName });
+  }
+
+  getLobby(sessionId: string): Observable<GameSessionLobby> {
+    return this.http.get<GameSessionLobby>(`/api/game-sessions/${sessionId}`);
   }
 }
 

@@ -11,14 +11,21 @@ public sealed class GameSession
     {
     }
 
-    private GameSession(Guid id, Guid missionId, string ownerUserId, string joinCodeHash)
+    private GameSession(
+        Guid id,
+        Guid missionId,
+        string ownerUserId,
+        string joinCodeHash,
+        DateTimeOffset createdAtUtc,
+        DateTimeOffset joinCodeExpiresAtUtc)
     {
         Id = id;
         MissionId = missionId;
         OwnerUserId = ownerUserId;
         JoinCodeHash = joinCodeHash;
         Status = GameSessionStatus.Lobby;
-        CreatedAtUtc = DateTimeOffset.UtcNow;
+        CreatedAtUtc = createdAtUtc;
+        JoinCodeExpiresAtUtc = joinCodeExpiresAtUtc;
     }
 
     public Guid Id { get; private set; }
@@ -27,17 +34,35 @@ public sealed class GameSession
     public string JoinCodeHash { get; private set; } = string.Empty;
     public GameSessionStatus Status { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; private set; }
+    public DateTimeOffset JoinCodeExpiresAtUtc { get; private set; }
     public DateTimeOffset? StartedAtUtc { get; private set; }
     public IReadOnlyCollection<Participant> Participants => _participants.AsReadOnly();
 
-    public static GameSession Create(Guid missionId, string ownerUserId, string ownerDisplayName, string joinCodeHash)
+    public static GameSession Create(
+        Guid missionId,
+        string ownerUserId,
+        string ownerDisplayName,
+        string joinCodeHash,
+        DateTimeOffset createdAtUtc,
+        DateTimeOffset joinCodeExpiresAtUtc)
     {
         if (string.IsNullOrWhiteSpace(ownerUserId) || string.IsNullOrWhiteSpace(joinCodeHash))
         {
             throw new DomainException("Owner and join code are required.");
         }
 
-        var session = new GameSession(Guid.NewGuid(), missionId, ownerUserId, joinCodeHash);
+        if (joinCodeExpiresAtUtc <= createdAtUtc)
+        {
+            throw new DomainException("Join code expiration must be after session creation.");
+        }
+
+        var session = new GameSession(
+            Guid.NewGuid(),
+            missionId,
+            ownerUserId,
+            joinCodeHash,
+            createdAtUtc,
+            joinCodeExpiresAtUtc);
         session.AddRegisteredParticipant(ownerUserId, ownerDisplayName);
         return session;
     }
@@ -53,9 +78,20 @@ public sealed class GameSession
         return AddParticipant(displayName, userId);
     }
 
-    public Participant AddGuest(string displayName)
+    public Participant JoinRegisteredParticipant(string userId, string displayName, DateTimeOffset nowUtc)
     {
-        EnsureLobby();
+        EnsureJoinable(nowUtc);
+        return AddRegisteredParticipant(userId, displayName);
+    }
+
+    public Participant AddGuest(string displayName, DateTimeOffset nowUtc)
+    {
+        EnsureJoinable(nowUtc);
+        if (displayName.Length > 40)
+        {
+            throw new DomainException("Guest display name cannot exceed 40 characters.");
+        }
+
         return AddParticipant(displayName, null);
     }
 
@@ -106,7 +142,14 @@ public sealed class GameSession
             throw new DomainException("Display name is required.");
         }
 
-        var participant = new Participant(Guid.NewGuid(), displayName, userId);
+        var normalizedName = displayName.Trim();
+        if (_participants.Any(participant =>
+                string.Equals(participant.DisplayName, normalizedName, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new DomainException("Display name is already used in this lobby.");
+        }
+
+        var participant = new Participant(Guid.NewGuid(), normalizedName, userId);
         _participants.Add(participant);
         return participant;
     }
@@ -116,6 +159,15 @@ public sealed class GameSession
         if (Status != GameSessionStatus.Lobby)
         {
             throw new DomainException("The game session is not in the lobby state.");
+        }
+    }
+
+    private void EnsureJoinable(DateTimeOffset nowUtc)
+    {
+        EnsureLobby();
+        if (nowUtc >= JoinCodeExpiresAtUtc)
+        {
+            throw new DomainException("Join code has expired.");
         }
     }
 }

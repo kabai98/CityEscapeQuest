@@ -1,9 +1,9 @@
 import { AsyncPipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { catchError, finalize, of } from 'rxjs';
-import { AuthApi, MissionApi, MissionSummary } from '../core/api';
+import { AuthApi, GameSessionApi, MissionApi, MissionSummary } from '../core/api';
 import { AuthStore } from '../core/auth.store';
 
 const demoMissions: readonly MissionSummary[] = [
@@ -105,7 +105,9 @@ export class LoginPage {
   private readonly api = inject(AuthApi);
   private readonly store = inject(AuthStore);
   private readonly router = inject(Router);
-  protected readonly guestMode = signal(false);
+  private readonly route = inject(ActivatedRoute);
+  private readonly sessions = inject(GameSessionApi);
+  protected readonly guestMode = signal(this.route.snapshot.queryParamMap.get('mode') === 'guest');
   protected readonly registerMode = signal(false);
   protected readonly busy = signal(false);
   protected readonly message = signal('');
@@ -140,7 +142,27 @@ export class LoginPage {
       return;
     }
     if (this.guestMode()) {
-      this.message.set('A vendég csatlakozási végpont a következő backend iterációban készül el.');
+      this.busy.set(true);
+      const { joinCode, displayName } = this.guestForm.getRawValue();
+      this.sessions.join(joinCode, displayName).subscribe({
+        next: result => {
+          if (!result.accessToken || !result.accessTokenExpiresAtUtc) {
+            this.busy.set(false);
+            this.message.set('A vendég hozzáférés nem érkezett meg.');
+            return;
+          }
+          this.store.set({
+            accessToken: result.accessToken,
+            refreshToken: null,
+            accessTokenExpiresAtUtc: result.accessTokenExpiresAtUtc
+          });
+          void this.router.navigate(['/lobby', result.sessionId]);
+        },
+        error: () => {
+          this.busy.set(false);
+          this.message.set('A csatlakozás nem sikerült. Ellenőrizd a kódot és a nevet.');
+        }
+      });
       return;
     }
     this.busy.set(true);

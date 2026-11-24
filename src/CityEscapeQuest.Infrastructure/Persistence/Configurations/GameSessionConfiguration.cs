@@ -12,6 +12,8 @@ internal sealed class GameSessionConfiguration : IEntityTypeConfiguration<GameSe
         builder.HasKey(session => session.Id);
         builder.Property(session => session.OwnerUserId).HasMaxLength(450).IsRequired();
         builder.Property(session => session.JoinCodeHash).HasMaxLength(64).IsRequired();
+        builder.HasIndex(session => session.JoinCodeHash).IsUnique();
+        builder.Property(session => session.JoinCodeExpiresAtUtc).IsRequired();
         builder.Property(session => session.Status).HasConversion<string>().HasMaxLength(32);
         builder.HasMany(session => session.Participants)
             .WithOne()

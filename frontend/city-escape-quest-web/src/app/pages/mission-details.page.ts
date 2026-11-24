@@ -27,13 +27,6 @@ import { AuthStore } from '../core/auth.store';
                 {{ creating() ? 'Csapat létrehozása…' : 'Csapat létrehozása' }}
               </button>
             </div>
-            @if (createdJoinCode(); as joinCode) {
-              <div class="session-result" role="status">
-                <span>Csapatkód</span>
-                <strong>{{ joinCode }}</strong>
-                <p>Oszd meg ezt a kódot a csapattagokkal.</p>
-              </div>
-            }
           </div>
           <aside>
             <span>Indulási információk</span>
@@ -63,7 +56,6 @@ export class MissionDetailsPage {
 
   protected readonly loading = signal(true);
   protected readonly creating = signal(false);
-  protected readonly createdJoinCode = signal<string | null>(null);
   protected readonly errorMessage = signal('');
   protected readonly mission$ = this.route.paramMap.pipe(
     switchMap(parameters => this.missions.get(parameters.get('id') ?? '')),
@@ -86,7 +78,9 @@ export class MissionDetailsPage {
     this.sessions.create(missionId)
       .pipe(finalize(() => this.creating.set(false)))
       .subscribe({
-        next: session => this.createdJoinCode.set(session.joinCode),
+        next: session => void this.router.navigate(['/lobby', session.sessionId], {
+          queryParams: { joinCode: session.joinCode }
+        }),
         error: () => this.errorMessage.set('A csapat létrehozása nem sikerült. Próbáld újra.')
       });
   }

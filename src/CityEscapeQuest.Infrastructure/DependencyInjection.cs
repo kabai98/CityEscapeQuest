@@ -32,6 +32,7 @@ public static class DependencyInjection
             .Validate(options => options.SigningKey.Length >= 32, "JWT signing key must be at least 32 characters.")
             .ValidateOnStart();
         services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<IGuestAccessTokenService, GuestAccessTokenService>();
         services.AddScoped<IMissionRepository, MissionRepository>();
         services.AddScoped<IGameSessionRepository, GameSessionRepository>();
         return services;

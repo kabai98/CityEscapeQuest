@@ -2,7 +2,7 @@ import { Injectable, computed, signal } from '@angular/core';
 
 export interface AuthTokens {
   accessToken: string;
-  refreshToken: string;
+  refreshToken: string | null;
   accessTokenExpiresAtUtc: string;
 }
 

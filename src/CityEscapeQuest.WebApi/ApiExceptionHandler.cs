@@ -24,7 +24,7 @@ public sealed class ApiExceptionHandler(
         };
 
         httpContext.Response.StatusCode = statusCode;
-        var detail = statusCode == StatusCodes.Status500InternalServerError && !environment.IsEnvironment("Testing")
+        var detail = statusCode == StatusCodes.Status500InternalServerError && !environment.IsDevelopment() && !environment.IsEnvironment("Testing")
             ? "The server could not complete the request."
             : exception.Message;
         return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext

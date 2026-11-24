@@ -60,6 +60,9 @@ namespace CityEscapeQuest.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<DateTimeOffset>("JoinCodeExpiresAtUtc")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("JoinCodeHash")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -82,6 +85,9 @@ namespace CityEscapeQuest.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(32)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("JoinCodeHash")
+                        .IsUnique();
 
                     b.ToTable("GameSessions", (string)null);
                 });

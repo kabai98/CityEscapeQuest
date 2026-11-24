@@ -9,9 +9,9 @@ public sealed class GameSessionTests
     [Fact]
     public void Start_WhenEveryParticipantIsInsideStartArea_StartsGame()
     {
-        var session = GameSession.Create(Guid.NewGuid(), "owner", "Owner", "hash");
-        var guest = session.AddGuest("Guest");
         var now = DateTimeOffset.UtcNow;
+        var session = GameSession.Create(Guid.NewGuid(), "owner", "Owner", "hash", now, now.AddHours(2));
+        var guest = session.AddGuest("Guest", now);
         var locations = session.Participants.Select(participant => new ParticipantLocation(
             participant.Id,
             new GeoPoint(47.4979, 19.0402),
@@ -28,9 +28,9 @@ public sealed class GameSessionTests
     [Fact]
     public void Start_WhenParticipantIsOutsideStartArea_ThrowsDomainException()
     {
-        var session = GameSession.Create(Guid.NewGuid(), "owner", "Owner", "hash");
-        session.AddGuest("Guest");
         var now = DateTimeOffset.UtcNow;
+        var session = GameSession.Create(Guid.NewGuid(), "owner", "Owner", "hash", now, now.AddHours(2));
+        session.AddGuest("Guest", now);
         var locations = session.Participants.Select(participant => new ParticipantLocation(
             participant.Id,
             new GeoPoint(47.5100, 19.0600),
@@ -47,5 +47,28 @@ public sealed class GameSessionTests
             50));
 
         Assert.Contains("inside", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void AddGuest_WhenJoinCodeExpired_ThrowsDomainException()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var session = GameSession.Create(Guid.NewGuid(), "owner", "Owner", "hash", now, now.AddHours(2));
+
+        var exception = Assert.Throws<DomainException>(() => session.AddGuest("Guest", now.AddHours(2)));
+
+        Assert.Contains("expired", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void AddGuest_WhenDisplayNameAlreadyUsed_ThrowsDomainException()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var session = GameSession.Create(Guid.NewGuid(), "owner", "Owner", "hash", now, now.AddHours(2));
+        session.AddGuest("Explorer", now);
+
+        var exception = Assert.Throws<DomainException>(() => session.AddGuest("explorer", now));
+
+        Assert.Contains("already", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

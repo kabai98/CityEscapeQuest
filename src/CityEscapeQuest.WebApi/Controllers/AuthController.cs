@@ -37,12 +37,12 @@ public sealed class AuthController(IIdentityService identityService) : Controlle
 }
 
 public sealed record RegisterRequest(
-    [property: Required, EmailAddress] string Email,
-    [property: Required, MinLength(10)] string Password,
-    [property: Required, MaxLength(80)] string DisplayName);
+    [Required, EmailAddress] string Email,
+    [Required, MinLength(10)] string Password,
+    [Required, MaxLength(80)] string DisplayName);
 
 public sealed record LoginRequest(
-    [property: Required, EmailAddress] string Email,
-    [property: Required] string Password);
+    [Required, EmailAddress] string Email,
+    [Required] string Password);
 
-public sealed record RefreshRequest([property: Required] string RefreshToken);
+public sealed record RefreshRequest([Required] string RefreshToken);

@@ -14,6 +14,11 @@ internal sealed class GameSessionRepository(AppDbContext dbContext) : IGameSessi
             .Include(session => session.Participants)
             .SingleOrDefaultAsync(session => session.Id == id, cancellationToken);
 
+    public Task<GameSession?> GetByJoinCodeHashAsync(string joinCodeHash, CancellationToken cancellationToken) =>
+        dbContext.GameSessions
+            .Include(session => session.Participants)
+            .SingleOrDefaultAsync(session => session.JoinCodeHash == joinCodeHash, cancellationToken);
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken) =>
         await dbContext.SaveChangesAsync(cancellationToken);
 }

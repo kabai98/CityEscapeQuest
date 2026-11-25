@@ -1,5 +1,5 @@
 import { AsyncPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { EMPTY, Subject, catchError, startWith, switchMap } from 'rxjs';
@@ -8,34 +8,7 @@ import { GameSessionApi } from '../core/api';
 @Component({
   selector: 'ceq-game-page',
   imports: [AsyncPipe, ReactiveFormsModule, RouterLink],
-  template: `
-    <section class="game-shell">
-      @if (state$ | async; as state) {
-        <div class="eyebrow"><span></span>{{ state.status }}</div>
-        <h1>{{ state.missionTitle }}</h1>
-        <article class="story-panel">
-          <h2>23:47 — A megállított idő</h2>
-          <p>{{ state.storyIntro }}</p>
-        </article>
-        @if (state.taskPrompt) {
-          <article class="task-panel">
-            <span>Első feladat</span>
-            <h2>A három vonal kódja</h2>
-            <p>{{ state.taskPrompt }}</p>
-            <form [formGroup]="answerForm" (ngSubmit)="submitAnswer()">
-              <label>Megfejtés<input formControlName="answer" autocomplete="off" placeholder="Írd be a választ"></label>
-              <button class="button primary" type="submit" [disabled]="submitting()">{{ submitting() ? 'Ellenőrzés…' : 'Válasz elküldése' }}</button>
-            </form>
-          </article>
-        }
-        @if (state.completionText) {
-          <article class="completion-panel"><span>✓ Küldetés teljesítve</span><h2>Az idő újra elindult</h2><p>{{ state.completionText }}</p><a class="button primary" routerLink="/missions">Új küldetés választása</a></article>
-        }
-      }
-      @if (message()) { <p class="form-message" role="alert">{{ message() }}</p> }
-    </section>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './game.page.html'
 })
 export class GamePage {
   private readonly route = inject(ActivatedRoute);

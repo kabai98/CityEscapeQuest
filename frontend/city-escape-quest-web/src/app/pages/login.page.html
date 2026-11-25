@@ -1,0 +1,16 @@
+<section class="auth-shell">
+      <div><div class="eyebrow"><span></span>Belépés a kalandba</div><h1>{{ guestMode() ? 'Csatlakozz a csapathoz.' : (registerMode() ? 'Kezdődjön a történeted.' : 'Folytasd a történeted.') }}</h1><p>{{ guestMode() ? 'Nem kell regisztrálnod. Add meg a csapatkódot és a neved.' : (registerMode() ? 'Hozd létre a játékosprofilodat néhány lépésben.' : 'Lépj be a küldetéseidhez, achievementjeidhez és csapataidhoz.') }}</p></div>
+      <form [formGroup]="activeForm" (ngSubmit)="submit()">
+        <div class="auth-tabs"><button type="button" [class.active]="!guestMode() && !registerMode()" (click)="selectMode('login')">Belépés</button><button type="button" [class.active]="registerMode()" (click)="selectMode('register')">Regisztráció</button><button type="button" [class.active]="guestMode()" (click)="selectMode('guest')">Vendég</button></div>
+        @if (guestMode()) {
+          <label>Csapatkód<input formControlName="joinCode" inputmode="numeric" placeholder="123456"></label>
+          <label>Megjelenő név<input formControlName="displayName" autocomplete="nickname" placeholder="Hogy szólíthatunk?"></label>
+        } @else {
+          @if (registerMode()) { <label>Megjelenő név<input formControlName="displayName" autocomplete="nickname" placeholder="Hogy szólíthatunk?"></label> }
+          <label>E-mail<input formControlName="email" type="email" autocomplete="email" placeholder="nev@pelda.hu"></label>
+          <label>Jelszó<input formControlName="password" type="password" [attr.autocomplete]="registerMode() ? 'new-password' : 'current-password'" placeholder="Legalább 10 karakter"></label>
+        }
+        <button class="button primary full" type="submit" [disabled]="busy()">{{ busy() ? 'Kapcsolódás…' : (guestMode() ? 'Csatlakozás' : (registerMode() ? 'Fiók létrehozása' : 'Belépés')) }}</button>
+        @if (message()) { <p class="form-message">{{ message() }}</p> }
+      </form>
+    </section>

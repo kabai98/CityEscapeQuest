@@ -1,0 +1,15 @@
+<section class="page-head"><div class="eyebrow"><span></span>Küldetéskatalógus</div><h1>Válasszatok<br><em>történetet.</em></h1><p>A nehézség változik. A csapatszellem mindig kell.</p></section>
+    <section class="catalog">
+      @if (missions$ | async; as missions) {
+        @for (mission of missions; track mission.id; let index = $index) {
+          <article class="mission-card">
+            <div class="mission-art"><span>0{{ index + 1 }}</span><div class="map-lines"></div></div>
+            <div class="mission-copy">
+              <div class="tags"><span>{{ mission.recommendedPlayers }} játékos</span><span>{{ mission.estimatedDurationMinutes }} perc</span></div>
+              <h2>{{ mission.title }}</h2><p>{{ mission.shortDescription }}</p>
+              <div class="card-foot"><strong>{{ mission.isFree ? 'Ingyenes' : ((mission.price ?? 0) | number:'1.0-0') + ' Ft' }}</strong><a [routerLink]="['/missions', mission.id]">Részletek →</a></div>
+            </div>
+          </article>
+        }
+      }
+    </section>

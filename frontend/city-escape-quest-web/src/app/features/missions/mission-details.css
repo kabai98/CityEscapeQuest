@@ -1,0 +1,44 @@
+.detail {
+  padding:70px clamp(20px,8vw,130px) 120px;
+}
+
+.detail-grid {
+  display:grid;
+  grid-template-columns:1.3fr .7fr;
+  gap:10vw;
+  margin-top:80px;
+}
+
+.detail h1 {
+  font-size:clamp(48px,7vw,95px);
+  letter-spacing:-.05em;
+}
+
+.detail p {
+  color:var(--mist);
+  max-width:650px;
+}
+
+.detail aside {
+  padding:35px;
+  border:1px solid var(--line);
+  background:var(--ink-2);
+}
+
+.detail aside>span {
+  font:500 11px var(--mono);
+  text-transform:uppercase;
+  color:var(--lime);
+}
+
+.detail li {
+  margin:22px 0;
+  color:var(--mist);
+}
+
+@media(max-width:800px) {
+  .detail-grid {
+    grid-template-columns:1fr;
+  }
+
+}

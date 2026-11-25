@@ -8,7 +8,8 @@ import { AuthStore } from '../../core/auth.store';
 @Component({
   selector: 'ceq-mission-details-page',
   imports: [AsyncPipe, DecimalPipe, RouterLink],
-  templateUrl: './mission-details.html'
+  templateUrl: './mission-details.html',
+  styleUrl: './mission-details.css'
 })
 export class MissionDetails {
   private readonly route = inject(ActivatedRoute);

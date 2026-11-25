@@ -7,7 +7,8 @@ import { GameSessionApi, GameSessionLobby } from '../../core/api';
 @Component({
   selector: 'ceq-lobby-page',
   imports: [AsyncPipe, DatePipe, RouterLink],
-  templateUrl: './lobby.html'
+  templateUrl: './lobby.html',
+  styleUrl: './lobby.css'
 })
 export class Lobby {
   private readonly route = inject(ActivatedRoute);

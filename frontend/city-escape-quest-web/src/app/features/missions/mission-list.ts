@@ -13,7 +13,8 @@ const demoMissions: readonly MissionSummary[] = [
 @Component({
   selector: 'ceq-missions-page',
   imports: [AsyncPipe, DecimalPipe, RouterLink],
-  templateUrl: './mission-list.html'
+  templateUrl: './mission-list.html',
+  styleUrl: './mission-list.css'
 })
 export class MissionList {
   private readonly api = inject(MissionApi);

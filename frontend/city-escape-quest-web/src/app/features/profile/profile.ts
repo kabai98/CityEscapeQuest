@@ -7,7 +7,8 @@ import { AuthStore } from '../../core/auth.store';
 @Component({
   selector: 'ceq-profile-page',
   imports: [RouterLink],
-  templateUrl: './profile.html'
+  templateUrl: './profile.html',
+  styleUrl: './profile.css'
 })
 export class Profile {
   protected readonly auth = inject(AuthStore);

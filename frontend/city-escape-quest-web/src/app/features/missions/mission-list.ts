@@ -2,7 +2,7 @@ import { AsyncPipe, DecimalPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
-import { MissionApi, MissionSummary } from '../core/api';
+import { MissionApi, MissionSummary } from '../../core/api';
 
 const demoMissions: readonly MissionSummary[] = [
   { id: '00000000-0000-0000-0000-000000000001', title: 'A budai kód', shortDescription: 'Egy eltűnt térképész nyomában a Várnegyed sikátoraiban.', recommendedPlayers: 4, estimatedDurationMinutes: 90, price: null, isFree: true, previewImageUrl: '' },
@@ -13,9 +13,9 @@ const demoMissions: readonly MissionSummary[] = [
 @Component({
   selector: 'ceq-missions-page',
   imports: [AsyncPipe, DecimalPipe, RouterLink],
-  templateUrl: './missions.page.html'
+  templateUrl: './mission-list.html'
 })
-export class MissionsPage {
+export class MissionList {
   private readonly api = inject(MissionApi);
   protected readonly missions$ = this.api.browse().pipe(catchError(() => of(demoMissions)));
 }

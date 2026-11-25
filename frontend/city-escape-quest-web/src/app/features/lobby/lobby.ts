@@ -2,14 +2,14 @@ import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EMPTY, Subject, catchError, startWith, switchMap } from 'rxjs';
-import { GameSessionApi } from '../core/api';
+import { GameSessionApi, GameSessionLobby } from '../../core/api';
 
 @Component({
   selector: 'ceq-lobby-page',
   imports: [AsyncPipe, DatePipe, RouterLink],
-  templateUrl: './lobby.page.html'
+  templateUrl: './lobby.html'
 })
-export class LobbyPage {
+export class Lobby {
   private readonly route = inject(ActivatedRoute);
   private readonly sessions = inject(GameSessionApi);
   private readonly router = inject(Router);
@@ -33,15 +33,15 @@ export class LobbyPage {
     this.reload.next();
   }
 
-  protected currentLocationReady(lobby: import('../core/api').GameSessionLobby): boolean {
+  protected currentLocationReady(lobby: GameSessionLobby): boolean {
     return lobby.participants.find(participant => participant.isCurrent)?.isLocationReady ?? false;
   }
 
-  protected isOwner(lobby: import('../core/api').GameSessionLobby): boolean {
+  protected isOwner(lobby: GameSessionLobby): boolean {
     return lobby.participants.some(participant => participant.isCurrent && participant.isOwner);
   }
 
-  protected allLocationsReady(lobby: import('../core/api').GameSessionLobby): boolean {
+  protected allLocationsReady(lobby: GameSessionLobby): boolean {
     return lobby.participants.length > 0 && lobby.participants.every(participant => participant.isLocationReady);
   }
 

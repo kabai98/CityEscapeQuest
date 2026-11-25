@@ -1,15 +1,15 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthApi, GameSessionApi } from '../core/api';
-import { AuthStore } from '../core/auth.store';
+import { AuthApi, GameSessionApi } from '../../core/api';
+import { AuthStore } from '../../core/auth.store';
 
 @Component({
   selector: 'ceq-login-page',
   imports: [ReactiveFormsModule],
-  templateUrl: './login.page.html'
+  templateUrl: './login.html'
 })
-export class LoginPage {
+export class Login {
   private readonly api = inject(AuthApi);
   private readonly store = inject(AuthStore);
   private readonly router = inject(Router);

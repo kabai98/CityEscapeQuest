@@ -2,15 +2,15 @@ import { AsyncPipe, DecimalPipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EMPTY, catchError, finalize, shareReplay, switchMap } from 'rxjs';
-import { GameSessionApi, MissionApi } from '../core/api';
-import { AuthStore } from '../core/auth.store';
+import { GameSessionApi, MissionApi } from '../../core/api';
+import { AuthStore } from '../../core/auth.store';
 
 @Component({
   selector: 'ceq-mission-details-page',
   imports: [AsyncPipe, DecimalPipe, RouterLink],
-  templateUrl: './mission-details.page.html'
+  templateUrl: './mission-details.html'
 })
-export class MissionDetailsPage {
+export class MissionDetails {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly missions = inject(MissionApi);

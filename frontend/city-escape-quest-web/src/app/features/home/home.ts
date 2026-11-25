@@ -4,6 +4,6 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: 'ceq-home-page',
   imports: [RouterLink],
-  templateUrl: './home.page.html'
+  templateUrl: './home.html'
 })
-export class HomePage {}
+export class Home {}

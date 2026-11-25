@@ -3,14 +3,14 @@ import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { EMPTY, Subject, catchError, startWith, switchMap } from 'rxjs';
-import { GameSessionApi } from '../core/api';
+import { GameSessionApi } from '../../core/api';
 
 @Component({
   selector: 'ceq-game-page',
   imports: [AsyncPipe, ReactiveFormsModule, RouterLink],
-  templateUrl: './game.page.html'
+  templateUrl: './game.html'
 })
-export class GamePage {
+export class Game {
   private readonly route = inject(ActivatedRoute);
   private readonly sessions = inject(GameSessionApi);
   private readonly reload = new Subject<void>();

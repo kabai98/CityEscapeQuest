@@ -8,7 +8,8 @@ import { GameSessionApi } from '../../core/api';
 @Component({
   selector: 'ceq-game-page',
   imports: [AsyncPipe, ReactiveFormsModule, RouterLink],
-  templateUrl: './game.html'
+  templateUrl: './game.html',
+  styleUrl: './game.css'
 })
 export class Game {
   private readonly route = inject(ActivatedRoute);

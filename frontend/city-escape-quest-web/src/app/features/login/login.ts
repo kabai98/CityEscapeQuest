@@ -7,7 +7,8 @@ import { AuthStore } from '../../core/auth.store';
 @Component({
   selector: 'ceq-login-page',
   imports: [ReactiveFormsModule],
-  templateUrl: './login.html'
+  templateUrl: './login.html',
+  styleUrl: './login.css'
 })
 export class Login {
   private readonly api = inject(AuthApi);

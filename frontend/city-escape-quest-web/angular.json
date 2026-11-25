@@ -15,7 +15,7 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": [{ "glob": "**/*", "input": "public" }],
-            "styles": ["src/styles.css", "src/lobby.css", "src/game.css"]
+            "styles": ["src/styles.css"]
           },
           "configurations": {
             "production": {

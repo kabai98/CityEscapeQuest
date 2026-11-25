@@ -103,6 +103,17 @@ npm start
 
 A JWT aláírókulcsot legalább 32 karakteres környezeti változóként vagy .NET user secretként kell megadni. Hitelesítő adatot ne commitolj a repositoryba.
 
+### Angular API-kliens generálása
+
+A frontend API-típusai és Angular szolgáltatásai a backend Swagger-leírásából készülnek. A jelenlegi backend fusson `Development` környezetben, majd a frontend mappájában futtasd:
+
+```powershell
+npm run api:generate
+npm run check
+```
+
+A parancs alapértelmezésben a `http://localhost:5245/swagger/v1/swagger.json` címet olvassa. Másik portnál állítsd be a `CEQ_OPENAPI_URL` környezeti változót. Ha egy régi backend fut ezen a címen, a generálás hibával leáll. A `src/app/generated/api` fájlokat ne szerkeszd kézzel; backend API-változás után generáld újra őket, és a változásukkal együtt commitold. A már legenerált kliens fordításához nem kell futó backend.
+
 ## Ellenőrzés
 
 ```powershell

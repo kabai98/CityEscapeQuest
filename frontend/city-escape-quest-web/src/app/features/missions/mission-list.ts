@@ -2,7 +2,8 @@ import { AsyncPipe, DecimalPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
-import { MissionApi, MissionSummary } from '../../core/api';
+import { MissionSummary } from '../../generated/api/models';
+import { MissionsService } from '../../generated/api/services';
 
 const demoMissions: readonly MissionSummary[] = [
   { id: '00000000-0000-0000-0000-000000000001', title: 'A budai kód', shortDescription: 'Egy eltűnt térképész nyomában a Várnegyed sikátoraiban.', recommendedPlayers: 4, estimatedDurationMinutes: 90, price: null, isFree: true, previewImageUrl: '' },
@@ -17,6 +18,6 @@ const demoMissions: readonly MissionSummary[] = [
   styleUrl: './mission-list.css'
 })
 export class MissionList {
-  private readonly api = inject(MissionApi);
-  protected readonly missions$ = this.api.browse().pipe(catchError(() => of(demoMissions)));
+  private readonly api = inject(MissionsService);
+  protected readonly missions$ = this.api.missionsBrowse(1, 20).pipe(catchError(() => of(demoMissions)));
 }

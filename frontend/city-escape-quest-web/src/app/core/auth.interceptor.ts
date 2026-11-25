@@ -1,5 +1,4 @@
 import {
-  HttpClient,
   HttpContext,
   HttpContextToken,
   HttpErrorResponse,
@@ -7,13 +6,14 @@ import {
 } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, switchMap, tap, throwError } from 'rxjs';
-import { AuthTokens, AuthStore } from './auth.store';
+import { AuthStore } from './auth.store';
+import { AuthService } from '../generated/api/services';
 
 const skipRefresh = new HttpContextToken<boolean>(() => false);
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const store = inject(AuthStore);
-  const http = inject(HttpClient);
+  const auth = inject(AuthService);
   const accessToken = store.tokens()?.accessToken;
   const authenticatedRequest = accessToken
     ? request.clone({ setHeaders: { Authorization: `Bearer ${accessToken}` } })
@@ -26,9 +26,9 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
         return throwError(() => error);
       }
 
-      return http.post<AuthTokens>(
-        '/api/auth/refresh',
+      return auth.authRefresh(
         { refreshToken },
+        'body',
         { context: new HttpContext().set(skipRefresh, true) }
       ).pipe(
         tap(tokens => store.set(tokens)),

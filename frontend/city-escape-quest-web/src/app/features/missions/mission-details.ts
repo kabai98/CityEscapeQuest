@@ -2,8 +2,8 @@ import { AsyncPipe, DecimalPipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EMPTY, catchError, finalize, shareReplay, switchMap } from 'rxjs';
-import { GameSessionApi, MissionApi } from '../../core/api';
 import { AuthStore } from '../../core/auth.store';
+import { GameSessionsService, MissionsService } from '../../generated/api/services';
 
 @Component({
   selector: 'ceq-mission-details-page',
@@ -14,15 +14,15 @@ import { AuthStore } from '../../core/auth.store';
 export class MissionDetails {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly missions = inject(MissionApi);
-  private readonly sessions = inject(GameSessionApi);
+  private readonly missions = inject(MissionsService);
+  private readonly sessions = inject(GameSessionsService);
   private readonly auth = inject(AuthStore);
 
   protected readonly loading = signal(true);
   protected readonly creating = signal(false);
   protected readonly errorMessage = signal('');
   protected readonly mission$ = this.route.paramMap.pipe(
-    switchMap(parameters => this.missions.get(parameters.get('id') ?? '')),
+    switchMap(parameters => this.missions.missionsGet(parameters.get('id') ?? '')),
     catchError(() => {
       this.errorMessage.set('A küldetés nem tölthető be. Ellenőrizd az API-kapcsolatot.');
       return EMPTY;
@@ -39,7 +39,7 @@ export class MissionDetails {
 
     this.creating.set(true);
     this.errorMessage.set('');
-    this.sessions.create(missionId)
+    this.sessions.gameSessionsCreate({ missionId })
       .pipe(finalize(() => this.creating.set(false)))
       .subscribe({
         next: session => void this.router.navigate(['/lobby', session.sessionId], {

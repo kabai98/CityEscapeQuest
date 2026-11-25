@@ -1,8 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { AuthApi } from '../../core/api';
 import { AuthStore } from '../../core/auth.store';
+import { AuthService } from '../../generated/api/services';
 
 @Component({
   selector: 'ceq-profile-page',
@@ -12,7 +12,7 @@ import { AuthStore } from '../../core/auth.store';
 })
 export class Profile {
   protected readonly auth = inject(AuthStore);
-  private readonly api = inject(AuthApi);
+  private readonly api = inject(AuthService);
 
   protected logout(): void {
     const refreshToken = this.auth.tokens()?.refreshToken;
@@ -21,7 +21,7 @@ export class Profile {
       return;
     }
 
-    this.api.revoke(refreshToken)
+    this.api.authRevoke({ refreshToken })
       .pipe(finalize(() => this.auth.clear()))
       .subscribe({ error: () => undefined });
   }

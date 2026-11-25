@@ -72,6 +72,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "City Escape Quest API", Version = "v1" });
+    options.SupportNonNullableReferenceTypes();
+    options.SchemaFilter<RequiredContractPropertiesSchemaFilter>();
+    options.CustomOperationIds(api =>
+    {
+        api.ActionDescriptor.RouteValues.TryGetValue("controller", out var controller);
+        api.ActionDescriptor.RouteValues.TryGetValue("action", out var action);
+        return controller is null || action is null ? null : $"{controller}{action}";
+    });
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",

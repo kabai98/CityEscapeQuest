@@ -2,7 +2,8 @@ import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EMPTY, Subject, catchError, startWith, switchMap } from 'rxjs';
-import { GameSessionApi, GameSessionLobby } from '../../core/api';
+import { GameSessionLobby } from '../../generated/api/models';
+import { GameSessionsService } from '../../generated/api/services';
 
 @Component({
   selector: 'ceq-lobby-page',
@@ -12,7 +13,7 @@ import { GameSessionApi, GameSessionLobby } from '../../core/api';
 })
 export class Lobby {
   private readonly route = inject(ActivatedRoute);
-  private readonly sessions = inject(GameSessionApi);
+  private readonly sessions = inject(GameSessionsService);
   private readonly router = inject(Router);
   private readonly reload = new Subject<void>();
   private readonly sessionId = this.route.snapshot.paramMap.get('id') ?? '';
@@ -22,7 +23,7 @@ export class Lobby {
   protected readonly starting = signal(false);
   protected readonly lobby$ = this.reload.pipe(
     startWith(undefined),
-    switchMap(() => this.sessions.getLobby(this.sessionId)),
+    switchMap(() => this.sessions.gameSessionsGetLobby(this.sessionId)),
     catchError(() => {
       this.errorMessage.set('A lobby nem tölthető be, vagy nincs hozzá jogosultságod.');
       return EMPTY;
@@ -56,13 +57,12 @@ export class Lobby {
     this.errorMessage.set('');
     navigator.geolocation.getCurrentPosition(
       position => {
-        this.sessions.reportLocation(
-          this.sessionId,
-          position.coords.latitude,
-          position.coords.longitude,
-          position.coords.accuracy,
-          new Date(position.timestamp).toISOString()
-        ).subscribe({
+        this.sessions.gameSessionsReportLocation(this.sessionId, {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracyMeters: position.coords.accuracy,
+          measuredAtUtc: new Date(position.timestamp).toISOString()
+        }).subscribe({
           next: () => { this.locating.set(false); this.refresh(); },
           error: () => { this.locating.set(false); this.errorMessage.set('A helyzet mentése nem sikerült.'); }
         });
@@ -75,7 +75,7 @@ export class Lobby {
   protected startGame(): void {
     this.starting.set(true);
     this.errorMessage.set('');
-    this.sessions.start(this.sessionId).subscribe({
+    this.sessions.gameSessionsStart(this.sessionId).subscribe({
       next: () => void this.router.navigate(['/game', this.sessionId]),
       error: () => { this.starting.set(false); this.errorMessage.set('A játék nem indítható. Ellenőrizd minden csapattag helyzetét.'); }
     });

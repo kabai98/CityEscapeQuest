@@ -3,7 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { EMPTY, Subject, catchError, startWith, switchMap } from 'rxjs';
-import { GameSessionApi } from '../../core/api';
+import { GameSessionsService } from '../../generated/api/services';
 
 @Component({
   selector: 'ceq-game-page',
@@ -13,7 +13,7 @@ import { GameSessionApi } from '../../core/api';
 })
 export class Game {
   private readonly route = inject(ActivatedRoute);
-  private readonly sessions = inject(GameSessionApi);
+  private readonly sessions = inject(GameSessionsService);
   private readonly reload = new Subject<void>();
   private readonly sessionId = this.route.snapshot.paramMap.get('id') ?? '';
   protected readonly message = signal('');
@@ -23,7 +23,7 @@ export class Game {
   });
   protected readonly state$ = this.reload.pipe(
     startWith(undefined),
-    switchMap(() => this.sessions.getState(this.sessionId)),
+    switchMap(() => this.sessions.gameSessionsGetState(this.sessionId)),
     catchError(() => { this.message.set('A játékállapot nem tölthető be.'); return EMPTY; })
   );
 
@@ -34,7 +34,7 @@ export class Game {
     }
     this.submitting.set(true);
     this.message.set('');
-    this.sessions.submitAnswer(this.sessionId, this.answerForm.controls.answer.value).subscribe({
+    this.sessions.gameSessionsSubmitAnswer(this.sessionId, { answer: this.answerForm.controls.answer.value }).subscribe({
       next: () => { this.submitting.set(false); this.reload.next(); },
       error: () => { this.submitting.set(false); this.message.set('Ez még nem a helyes megfejtés. Nézzetek körül a téren!'); }
     });

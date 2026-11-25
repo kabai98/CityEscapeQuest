@@ -5,7 +5,8 @@
   "scripts": {
     "start": "ng serve",
     "build": "ng build",
-    "check": "ng build --configuration production"
+    "check": "ng build --configuration production",
+    "api:generate": "ng-openapi -c openapi.config.mjs"
   },
   "dependencies": {
     "@angular/common": "22.3.0",
@@ -21,6 +22,7 @@
     "@angular/build": "22.3.0",
     "@angular/cli": "22.3.0",
     "@angular/compiler-cli": "22.3.0",
+    "ng-openapi": "0.6.0",
     "typescript": "6.0.2"
   }
 }

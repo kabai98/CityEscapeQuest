@@ -14,6 +14,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Mission> Missions => Set<Mission>();
     public DbSet<GameSession> GameSessions => Set<GameSession>();
     public DbSet<Achievement> Achievements => Set<Achievement>();
+    public DbSet<MissionLocation> MissionLocations => Set<MissionLocation>();
+    public DbSet<Participant> GameSessionParticipants => Set<Participant>();
     public DbSet<RefreshTokenSession> RefreshTokenSessions => Set<RefreshTokenSession>();
 
     protected override void OnModelCreating(ModelBuilder builder)

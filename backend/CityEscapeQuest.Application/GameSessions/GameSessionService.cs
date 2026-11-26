@@ -1,3 +1,4 @@
+using CityEscapeQuest.Domain.GameSessions.ValueObjects;
 using System.Security.Cryptography;
 using System.Text;
 using CityEscapeQuest.Application.Abstractions;
@@ -135,14 +136,14 @@ public sealed class GameSessionService(
             ?? throw new KeyNotFoundException("Mission was not found.");
 
         var now = timeProvider.GetUtcNow();
-        session.Start(
+        var requirements = new GameStartRequirements(
             mission.StartLocation.Coordinates,
             mission.StartRadiusMeters,
             mission.MinimumPlayers,
-            now,
             TimeSpan.FromMinutes(2),
-            maximumAccuracyMeters: 50,
-            isLocationCheckEnabled: mission.IsLocationCheckEnabled);
+            50,
+            mission.IsLocationCheckEnabled);
+        session.Start(requirements, now);
 
         await dbContext.SaveChangesAsync(cancellationToken);
         return ToGamePlayState(session, mission);

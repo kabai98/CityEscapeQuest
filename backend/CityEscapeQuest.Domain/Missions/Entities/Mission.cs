@@ -1,6 +1,6 @@
+using CityEscapeQuest.Domain.Missions.Rules;
+using CityEscapeQuest.Domain.Missions.ValueObjects;
 using CityEscapeQuest.Domain.Common;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace CityEscapeQuest.Domain.Missions;
 
@@ -78,21 +78,5 @@ public sealed class Mission
     public string AnswerHash { get; private set; } = string.Empty;
     public string CompletionText { get; private set; } = string.Empty;
 
-    public bool IsCorrectAnswer(string answer)
-    {
-        if (string.IsNullOrWhiteSpace(AnswerHash) || string.IsNullOrWhiteSpace(answer))
-        {
-            return false;
-        }
-
-        var normalized = answer.Trim().ToUpperInvariant();
-        if (normalized == "HAT")
-        {
-            normalized = "6";
-        }
-        var suppliedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalized)));
-        return CryptographicOperations.FixedTimeEquals(
-            Convert.FromHexString(AnswerHash),
-            Convert.FromHexString(suppliedHash));
-    }
+    public bool IsCorrectAnswer(string answer) => MissionAnswerMatcher.Matches(AnswerHash, answer);
 }

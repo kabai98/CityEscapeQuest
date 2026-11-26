@@ -1,4 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <UserSecretsId>df182487-9d1a-43d6-a1a1-c4aca14260c4</UserSecretsId>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../CityEscapeQuest.Application/CityEscapeQuest.Application.csproj" />
     <ProjectReference Include="../CityEscapeQuest.Infrastructure/CityEscapeQuest.Infrastructure.csproj" />

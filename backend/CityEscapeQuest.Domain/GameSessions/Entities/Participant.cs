@@ -1,3 +1,6 @@
+using CityEscapeQuest.Domain.Missions.ValueObjects;
+using CityEscapeQuest.Domain.GameSessions.ValueObjects;
+
 namespace CityEscapeQuest.Domain.GameSessions;
 
 public sealed class Participant
@@ -30,7 +33,7 @@ public sealed class Participant
         DateTimeOffset measuredAtUtc,
         DateTimeOffset receivedAtUtc)
     {
-        _ = new Missions.GeoPoint(latitude, longitude);
+        _ = new GeoPoint(latitude, longitude);
         if (accuracyMeters <= 0 || measuredAtUtc > receivedAtUtc.AddMinutes(1))
         {
             throw new Common.DomainException("Location evidence is invalid.");
@@ -52,7 +55,7 @@ public sealed class Participant
 
         return new ParticipantLocation(
             Id,
-            new Missions.GeoPoint(LastLatitude.Value, LastLongitude.Value),
+            new GeoPoint(LastLatitude.Value, LastLongitude.Value),
             LastAccuracyMeters.Value,
             LocationMeasuredAtUtc.Value);
     }

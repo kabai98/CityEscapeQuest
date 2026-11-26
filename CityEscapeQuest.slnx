@@ -1,9 +1,9 @@
 <Solution>
-  <Folder Name="/backend/src/">
-    <Project Path="backend/src/CityEscapeQuest.Domain/CityEscapeQuest.Domain.csproj" />
-    <Project Path="backend/src/CityEscapeQuest.Application/CityEscapeQuest.Application.csproj" />
-    <Project Path="backend/src/CityEscapeQuest.Infrastructure/CityEscapeQuest.Infrastructure.csproj" />
-    <Project Path="backend/src/CityEscapeQuest.WebApi/CityEscapeQuest.WebApi.csproj" />
+  <Folder Name="/backend/">
+    <Project Path="backend/CityEscapeQuest.Domain/CityEscapeQuest.Domain.csproj" />
+    <Project Path="backend/CityEscapeQuest.Application/CityEscapeQuest.Application.csproj" />
+    <Project Path="backend/CityEscapeQuest.Infrastructure/CityEscapeQuest.Infrastructure.csproj" />
+    <Project Path="backend/CityEscapeQuest.WebApi/CityEscapeQuest.WebApi.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/CityEscapeQuest.Domain.UnitTests/CityEscapeQuest.Domain.UnitTests.csproj" />

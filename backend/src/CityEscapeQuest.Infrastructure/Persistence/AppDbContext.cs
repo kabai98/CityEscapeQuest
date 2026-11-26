@@ -1,3 +1,4 @@
+using CityEscapeQuest.Application.Abstractions;
 using CityEscapeQuest.Domain.Achievements;
 using CityEscapeQuest.Domain.GameSessions;
 using CityEscapeQuest.Domain.Missions;
@@ -8,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CityEscapeQuest.Infrastructure.Persistence;
 
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
-    : IdentityDbContext<ApplicationUser>(options)
+    : IdentityDbContext<ApplicationUser>(options), IApplicationDbContext
 {
     public DbSet<Mission> Missions => Set<Mission>();
     public DbSet<GameSession> GameSessions => Set<GameSession>();

@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using CityEscapeQuest.Application.GameSessions;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -10,7 +11,9 @@ namespace CityEscapeQuest.WebApi.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/game-sessions")]
-public sealed class GameSessionsController(GameSessionService gameSessions) : ControllerBase
+public sealed class GameSessionsController(
+    GameSessionService gameSessions,
+    IValidator<ReportLocationRequest> locationValidator) : ControllerBase
 {
     [AllowAnonymous]
     [EnableRateLimiting("guest-join")]
@@ -62,6 +65,12 @@ public sealed class GameSessionsController(GameSessionService gameSessions) : Co
         ReportLocationRequest request,
         CancellationToken cancellationToken)
     {
+        var validation = await locationValidator.ValidateAsync(request, cancellationToken);
+        if (!validation.IsValid)
+        {
+            return ValidationProblem(new ValidationProblemDetails(validation.ToDictionary()));
+        }
+
         await gameSessions.ReportLocationAsync(
             id,
             GetUserId(),
@@ -99,8 +108,8 @@ public sealed record JoinGameSessionRequest(
     [Required, MaxLength(40)] string DisplayName);
 
 public sealed record ReportLocationRequest(
-    [Range(-90, 90)] double Latitude,
-    [Range(-180, 180)] double Longitude,
-    [Range(0.1, 10_000)] double AccuracyMeters,
+    double Latitude,
+    double Longitude,
+    double AccuracyMeters,
     DateTimeOffset MeasuredAtUtc);
 public sealed record SubmitAnswerRequest([Required, MaxLength(100)] string Answer);

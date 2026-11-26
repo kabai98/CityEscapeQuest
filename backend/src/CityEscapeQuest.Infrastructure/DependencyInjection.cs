@@ -33,8 +33,7 @@ public static class DependencyInjection
             .ValidateOnStart();
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IGuestAccessTokenService, GuestAccessTokenService>();
-        services.AddScoped<IMissionRepository, MissionRepository>();
-        services.AddScoped<IGameSessionRepository, GameSessionRepository>();
+        services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<AppDbContext>());
         return services;
     }
 }

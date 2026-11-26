@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using System.Net;
+using System.Net.Http.Json;
 
 namespace CityEscapeQuest.WebApi.IntegrationTests;
 
@@ -23,6 +25,19 @@ public sealed class HealthEndpointTests : IClassFixture<HealthEndpointTests.ApiF
         var responseBody = await response.Content.ReadAsStringAsync();
 
         Assert.True(response.IsSuccessStatusCode, $"HTTP {(int)response.StatusCode}: {responseBody}");
+    }
+
+    [Fact]
+    public async Task AuthenticationRateLimit_RejectsExcessRequests()
+    {
+        for (var attempt = 0; attempt < 10; attempt++)
+        {
+            using var allowedResponse = await _client.PostAsJsonAsync("/api/auth/login", new { });
+            Assert.NotEqual(HttpStatusCode.TooManyRequests, allowedResponse.StatusCode);
+        }
+
+        using var limitedResponse = await _client.PostAsJsonAsync("/api/auth/login", new { });
+        Assert.Equal(HttpStatusCode.TooManyRequests, limitedResponse.StatusCode);
     }
 
     public sealed class ApiFactory : WebApplicationFactory<Program>

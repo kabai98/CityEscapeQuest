@@ -9,7 +9,8 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<MissionCatalogService>();
-        services.AddScoped<GameSessionService>();
+        services.AddScoped<GameSessionLobbyService>();
+        services.AddScoped<GameSessionPlayService>();
         services.AddSingleton(TimeProvider.System);
         return services;
     }

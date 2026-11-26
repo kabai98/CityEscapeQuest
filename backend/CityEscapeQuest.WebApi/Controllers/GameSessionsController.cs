@@ -1,3 +1,4 @@
+using CityEscapeQuest.Application.GameSessions.Dtos;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using CityEscapeQuest.Application.GameSessions;
@@ -12,7 +13,8 @@ namespace CityEscapeQuest.WebApi.Controllers;
 [Authorize]
 [Route("api/game-sessions")]
 public sealed class GameSessionsController(
-    GameSessionService gameSessions,
+    GameSessionLobbyService lobby,
+    GameSessionPlayService gamePlay,
     IValidator<ReportLocationRequest> locationValidator) : ControllerBase
 {
     [AllowAnonymous]
@@ -22,7 +24,7 @@ public sealed class GameSessionsController(
     public Task<JoinedGameSession> Join(
         JoinGameSessionRequest request,
         CancellationToken cancellationToken) =>
-        gameSessions.JoinAsync(
+        lobby.JoinAsync(
             request.JoinCode,
             request.DisplayName,
             User.Identity?.IsAuthenticated == true ? GetUserId() : null,
@@ -34,7 +36,7 @@ public sealed class GameSessionsController(
     {
         var participantClaim = User.FindFirstValue("participant_id");
         var guestParticipantId = Guid.TryParse(participantClaim, out var parsed) ? parsed : (Guid?)null;
-        return gameSessions.GetLobbyAsync(id, GetUserId(), guestParticipantId, cancellationToken);
+        return lobby.GetLobbyAsync(id, GetUserId(), guestParticipantId, cancellationToken);
     }
 
     [HttpPost]
@@ -43,7 +45,7 @@ public sealed class GameSessionsController(
         CreateGameSessionRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await gameSessions.CreateAsync(
+        var result = await lobby.CreateAsync(
             request.MissionId,
             GetUserId(),
             User.Identity?.Name ?? "Player",
@@ -56,7 +58,7 @@ public sealed class GameSessionsController(
     public Task<GamePlayState> Start(
         Guid id,
         CancellationToken cancellationToken) =>
-        gameSessions.StartAsync(id, GetUserId(), cancellationToken);
+        gamePlay.StartAsync(id, GetUserId(), cancellationToken);
 
     [HttpPost("{id:guid}/location")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -71,7 +73,7 @@ public sealed class GameSessionsController(
             return ValidationProblem(new ValidationProblemDetails(validation.ToDictionary()));
         }
 
-        await gameSessions.ReportLocationAsync(
+        await lobby.ReportLocationAsync(
             id,
             GetUserId(),
             GetGuestParticipantId(),
@@ -83,7 +85,7 @@ public sealed class GameSessionsController(
     [HttpGet("{id:guid}/state")]
     [ProducesResponseType<GamePlayState>(StatusCodes.Status200OK)]
     public Task<GamePlayState> GetState(Guid id, CancellationToken cancellationToken) =>
-        gameSessions.GetGameStateAsync(id, GetUserId(), GetGuestParticipantId(), cancellationToken);
+        gamePlay.GetGameStateAsync(id, GetUserId(), GetGuestParticipantId(), cancellationToken);
 
     [HttpPost("{id:guid}/answer")]
     [ProducesResponseType<GamePlayState>(StatusCodes.Status200OK)]
@@ -91,7 +93,7 @@ public sealed class GameSessionsController(
         Guid id,
         SubmitAnswerRequest request,
         CancellationToken cancellationToken) =>
-        gameSessions.SubmitAnswerAsync(id, GetUserId(), GetGuestParticipantId(), request.Answer, cancellationToken);
+        gamePlay.SubmitAnswerAsync(id, GetUserId(), GetGuestParticipantId(), request.Answer, cancellationToken);
 
     private string GetUserId() =>
         User.FindFirstValue(ClaimTypes.NameIdentifier)

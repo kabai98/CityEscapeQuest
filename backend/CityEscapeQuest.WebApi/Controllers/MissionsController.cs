@@ -1,3 +1,4 @@
+using CityEscapeQuest.Application.Missions.Dtos;
 using CityEscapeQuest.Application.Missions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

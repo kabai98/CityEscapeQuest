@@ -1,5 +1,6 @@
+using CityEscapeQuest.Domain.GameSessions.Rules;
+using CityEscapeQuest.Domain.GameSessions.ValueObjects;
 using CityEscapeQuest.Domain.Common;
-using CityEscapeQuest.Domain.Missions;
 
 namespace CityEscapeQuest.Domain.GameSessions;
 
@@ -72,11 +73,6 @@ public sealed class GameSession
     public Participant AddRegisteredParticipant(string userId, string displayName)
     {
         EnsureLobby();
-        if (_participants.Any(participant => participant.UserId == userId))
-        {
-            throw new DomainException("The user has already joined this session.");
-        }
-
         return AddParticipant(displayName, userId);
     }
 
@@ -89,11 +85,6 @@ public sealed class GameSession
     public Participant AddGuest(string displayName, DateTimeOffset nowUtc)
     {
         EnsureJoinable(nowUtc);
-        if (displayName.Length > 40)
-        {
-            throw new DomainException("Guest display name cannot exceed 40 characters.");
-        }
-
         return AddParticipant(displayName, null);
     }
 
@@ -111,35 +102,10 @@ public sealed class GameSession
         participant.ReportLocation(latitude, longitude, accuracyMeters, measuredAtUtc, receivedAtUtc);
     }
 
-    public void Start(
-        GeoPoint missionStart,
-        int radiusMeters,
-        int minimumPlayers,
-        DateTimeOffset nowUtc,
-        TimeSpan maximumLocationAge,
-        double maximumAccuracyMeters,
-        bool isLocationCheckEnabled = true)
+    public void Start(GameStartRequirements requirements, DateTimeOffset nowUtc)
     {
         EnsureLobby();
-        if (_participants.Count < minimumPlayers)
-        {
-            throw new DomainException("The mission does not have enough participants.");
-        }
-
-        if (isLocationCheckEnabled)
-        {
-            foreach (var participant in _participants)
-            {
-                var location = participant.GetLocation()
-                    ?? throw new DomainException($"Location is missing for participant {participant.Id}.");
-                if (location.MeasuredAtUtc < nowUtc - maximumLocationAge)
-                    throw new DomainException("Every participant must provide a fresh location.");
-                if (location.AccuracyMeters > maximumAccuracyMeters)
-                    throw new DomainException("Every participant must provide an accurate location.");
-                if (missionStart.DistanceToInMeters(location.Position) > radiusMeters)
-                    throw new DomainException("Every participant must be inside the mission start area.");
-            }
-        }
+        GameStartPolicy.EnsureCanStart(_participants, requirements, nowUtc);
 
         Status = GameSessionStatus.InProgress;
         StartedAtUtc = nowUtc;
@@ -160,19 +126,7 @@ public sealed class GameSession
 
     private Participant AddParticipant(string displayName, string? userId)
     {
-        if (string.IsNullOrWhiteSpace(displayName))
-        {
-            throw new DomainException("Display name is required.");
-        }
-
-        var normalizedName = displayName.Trim();
-        if (_participants.Any(participant =>
-                string.Equals(participant.DisplayName, normalizedName, StringComparison.OrdinalIgnoreCase)))
-        {
-            throw new DomainException("Display name is already used in this lobby.");
-        }
-
-        var participant = new Participant(Guid.NewGuid(), normalizedName, userId);
+        var participant = ParticipantRegistrationPolicy.CreateParticipant(_participants, displayName, userId);
         _participants.Add(participant);
         return participant;
     }

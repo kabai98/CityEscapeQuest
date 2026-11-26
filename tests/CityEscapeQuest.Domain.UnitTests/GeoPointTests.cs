@@ -1,4 +1,4 @@
-using CityEscapeQuest.Domain.Missions;
+using CityEscapeQuest.Domain.Missions.ValueObjects;
 
 namespace CityEscapeQuest.Domain.UnitTests;
 

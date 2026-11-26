@@ -1,12 +1,19 @@
+using CityEscapeQuest.Domain.Missions.ValueObjects;
 namespace CityEscapeQuest.Domain.Missions;
 
 public sealed class MissionLocation
 {
-    private MissionLocation() { }
+    private MissionLocation()
+    {
+    }
 
     public MissionLocation(Guid id, GeoPoint coordinates, int radiusMeters)
     {
-        if (radiusMeters < 1) throw new Common.DomainException("Start radius must be positive.");
+        if (radiusMeters < 1)
+        {
+            throw new Common.DomainException("Start radius must be positive.");
+        }
+
         Id = id;
         Latitude = coordinates.Latitude;
         Longitude = coordinates.Longitude;

@@ -1,6 +1,6 @@
-using CityEscapeQuest.Domain.Missions;
+using CityEscapeQuest.Domain.Missions.ValueObjects;
 
-namespace CityEscapeQuest.Domain.GameSessions;
+namespace CityEscapeQuest.Domain.GameSessions.ValueObjects;
 
 public sealed record ParticipantLocation(
     Guid ParticipantId,

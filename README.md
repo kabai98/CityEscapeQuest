@@ -88,9 +88,9 @@ Szükséges: .NET SDK 10.0.301 vagy kompatibilis patch verzió, Node.js/npm, val
 ```powershell
 dotnet restore CityEscapeQuest.slnx
 dotnet ef database update `
-  --project backend/src/CityEscapeQuest.Infrastructure `
-  --startup-project backend/src/CityEscapeQuest.WebApi
-dotnet run --project backend/src/CityEscapeQuest.WebApi
+  --project backend/CityEscapeQuest.Infrastructure `
+  --startup-project backend/CityEscapeQuest.WebApi
+dotnet run --project backend/CityEscapeQuest.WebApi
 ```
 
 Egy külön terminálban:

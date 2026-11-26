@@ -1,5 +1,4 @@
 using CityEscapeQuest.Domain.Missions.ValueObjects;
-using CityEscapeQuest.Domain.Missions;
 
 namespace CityEscapeQuest.Domain.GameSessions.ValueObjects;
 
